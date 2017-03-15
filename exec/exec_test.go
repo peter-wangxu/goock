@@ -19,9 +19,18 @@ package exec
 import (
 	osexec "os/exec"
 	"testing"
+	"runtime"
 )
 
+
+func skipIfWindows(t *testing.T){
+	osName := runtime.GOOS
+	if(osName == "windows"){
+		t.Skip("Test case is skipped, as it's for non-windows platform.")
+	}
+}
 func TestExecutorNoArgs(t *testing.T) {
+	skipIfWindows(t)
 	ex := New()
 
 	cmd := ex.Command("true")
@@ -62,6 +71,7 @@ func TestExecutorNoArgs(t *testing.T) {
 }
 
 func TestExecutorWithArgs(t *testing.T) {
+	skipIfWindows(t)
 	ex := New()
 
 	cmd := ex.Command("echo", "stdout")
@@ -84,6 +94,7 @@ func TestExecutorWithArgs(t *testing.T) {
 }
 
 func TestLookPath(t *testing.T) {
+	skipIfWindows(t)
 	ex := New()
 
 	shExpected, _ := osexec.LookPath("sh")
