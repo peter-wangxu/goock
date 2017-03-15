@@ -89,6 +89,22 @@ func (c *ISCSIConnector) getVolumePaths(connection_properties ConnectionProperty
 
 }
 
+func (c *ISCSIConnector) validateIfaceTransport(transport_iface string) string {
+	// TODO need to support multiple transports?
+}
+
+// Discover all target portals
+func (c *ISCSIConnector) discoverIscsiPortal(target_portal string) []string {
+	cmd = c.exec.Command(iscsiadm, "-m", "discovery", "-t", "sendtargets",
+		"-p", target_portal)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		// LOG warning here
+	}
+	// Parse output like 10.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae5ef3.h1
+	// TODO add common parser for the output
+}
+
 // func (c *ISCSIConnector) set_execute(self, execute){
 // }
 // func (c *ISCSIConnector) _validate_iface_transport(self, transport_iface){
