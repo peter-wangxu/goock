@@ -1,16 +1,15 @@
 package linux
 
-import ("github.com/peter-wangxu/goock/exec"
+import (
 	"github.com/Sirupsen/logrus"
 	"fmt"
 )
 
-var executor = exec.New()
 
 // Flush device(s) via multipath -f <device>/-F
 func FlushPath(path string) (error){
 	var err error
-	if (nil != path){
+	if (path != ""){
 		_, err  = executor.Command("multipath", "-f", path).CombinedOutput()
 	} else {
 		_, err = executor.Command("multipaht", "-F").CombinedOutput()
@@ -19,7 +18,7 @@ func FlushPath(path string) (error){
 }
 
 // Get paths by multipath -ll
-func GetPaths(path string) (error){
+func GetPaths(path string) ([]string, error){
 	// TODO wait for the multipath parser
 	output, err := executor.Command("multipath", "-l", path).CombinedOutput()
 	if(nil != err) {
@@ -27,7 +26,7 @@ func GetPaths(path string) (error){
 	} else {
 		// TODO parse and return
 	}
-	return output
+	return []string{string(output)}, nil
 }
 
 

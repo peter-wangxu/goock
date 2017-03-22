@@ -2,13 +2,11 @@ package linux
 
 import (
 	"os"
-	"github.com/peter-wangxu/goock/exec"
 	"github.com/peter-wangxu/goock/model"
 	"strings"
 	"fmt"
 )
 
-var executor = exec.New()
 
 func IsFCSupport() bool {
 	_, err := os.Stat("/sys/class/fc_host")
@@ -54,6 +52,6 @@ func RescanHosts() {
 	hbas := GetFCHBA()
 	for _, hba := range hbas{
 		path := fmt.Sprintf("/sys/class/scsi_host/%s/scan", hba.Name)
-		ScanSCSIBus(path, nil)
+		ScanSCSIBus(path, "")
 	}
 }

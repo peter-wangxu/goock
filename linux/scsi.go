@@ -14,7 +14,7 @@ var executor = exec.New()
 func GetWWN(path string) string {
 	output, _ := executor.Command("/lib/udev/scsi_id", "--page", "0x83",
 				      "--whitelisted", path).CombinedOutput()
-	return strings.Trim(output, " ")
+	return strings.Trim(string(output), " ")
 }
 
 // Check if path is already RW/RO
@@ -36,7 +36,7 @@ func GetWWN(path string) string {
 func CheckReadWrite(path string, wwn string) bool {
 	output, _ := executor.Command("lsblk", "-o", "NAME,RO", "-l", "-n").CombinedOutput()
 	pattern, _ := regexp.Compile("(\\w+)\\s+([01])\\s?")
-	results := pattern.FindAllStringSubmatch(output, -1)
+	results := pattern.FindAllStringSubmatch(string(output), -1)
 	for _, result := range(results){
 		k, v := result[1], result[2]
 		if(k == path || k == wwn) {
@@ -51,36 +51,36 @@ func CheckReadWrite(path string, wwn string) bool {
 // Get block device size
 func GetDeviceSize(path string) int {
 	output, err := executor.Command("blockdev", "--getsize64", path).CombinedOutput()
-
 	if(nil != err){
 		logrus.WithError(err).Warn("Unable to get size of device %s", path)
 	}
-	output = strings.Trim(output, " ")
-	if(output == ""){
+	trimmed := strings.Trim(string(output), " ")
+	if(trimmed == ""){
 		return 0
 	}
-	return strconv.Atoi(output)
+	i, _ := strconv.Atoi(trimmed)
+	return i
 }
 
 // use echo "c t l" > to /sys/class/scsi_host/%s/scan
 func ScanSCSIBus(path string, content string) {
-	if(nil == content || content == "") {
+	if(content == "") {
 		// "hba_channel target_id target_lun"
 		content = "- - -"
 	}
 	cmd := executor.Command("tee", "-a", path)
-	cmd.SetStdin(content)
+	cmd.SetStdin(strings.NewReader(content))
 	cmd.CombinedOutput()
 }
 
 // Use echo 1 > /sys/block/%s/device/delete to force delete the device
 func RemoveSCSIDevice(path string) {
-	if(!strings.Contains("/", -1)){
+	if(!strings.Contains(path, "/")){
 		path = fmt.Sprintf("/sys/block/%s/device/delete", path)
 	}
 
 	cmd := executor.Command("tee", "-a",  path)
-	cmd.SetStdin("1")
+	cmd.SetStdin(strings.NewReader("1"))
 	cmd.CombinedOutput()
 }
 

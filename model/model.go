@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"os/exec"
+	"github.com/peter-wangxu/goock/exec"
 )
+
+var executor = exec.New()
 
 type Parser interface {
 	Parse(output string, pat interface{}) []map[string]string
@@ -169,15 +171,11 @@ func (iscsi *ISCSISession) Parse() []ISCSISession {
 
 func (iscsi *ISCSISession) getOutput() string {
 	cmd := iscsi.GetCommand()
-	out, err := exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
+	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
 	if(nil != err){
 		return ""
 	}
 	return string(out[:])
-	//return `10.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae5ef3.h1
- //11.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae6ef3.h2
-//asdfasd
-//asdfasdfasdf`
 }
 func NewISCSISession() *ISCSISession {
 	return &ISCSISession{parser: &DefaultParser{}}
@@ -249,65 +247,12 @@ func (s *HBA) Parse() []HBA {
 }
 
 func (s *HBA) getOutput() string {
-	return `Class = "fc_host"
-
-  Class Device = "host7"
-  Class Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.0/host7/fc_host/host7"
-    active_fc4s         = "0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 "
-    dev_loss_tmo        = "30"
-    fabric_name         = "0x100050eb1a033f59"
-    issue_lip           = <store method only>
-    max_npiv_vports     = "255"
-    maxframe_size       = "2048 bytes"
-    node_name           = "0x20000090fa534cd0"
-    npiv_vports_inuse   = "0"
-    port_id             = "0x010e00"
-    port_name           = "0x10000090fa534cd0"
-    port_state          = "Online"
-    port_type           = "NPort (fabric via point-to-point)"
-    speed               = "8 Gbit"
-    supported_classes   = "Class 3"
-    supported_fc4s      = "0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 "
-    supported_speeds    = "4 Gbit, 8 Gbit, 16 Gbit"
-    symbolic_name       = "Emulex LPe16002B-E FV1.1.21.8 DV11.0.0.10. HN:(none) OS:Linux"
-    tgtid_bind_type     = "wwpn (World Wide Port Name)"
-    uevent              =
-    vport_create        = <store method only>
-    vport_delete        = <store method only>
-
-    Device = "host7"
-    Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.0/host7"
-      uevent              = "DEVTYPE=scsi_host"
-
-
-  Class Device = "host9"
-  Class Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/fc_host/host9"
-    active_fc4s         = "0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 "
-    dev_loss_tmo        = "30"
-    fabric_name         = "0x10000027f8c7928a"
-    issue_lip           = <store method only>
-    max_npiv_vports     = "255"
-    maxframe_size       = "2048 bytes"
-    node_name           = "0x20000090fa534cd1"
-    npiv_vports_inuse   = "0"
-    port_id             = "0x020d00"
-    port_name           = "0x10000090fa534cd1"
-    port_state          = "Online"
-    port_type           = "NPort (fabric via point-to-point)"
-    speed               = "16 Gbit"
-    supported_classes   = "Class 3"
-    supported_fc4s      = "0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 "
-    supported_speeds    = "4 Gbit, 8 Gbit, 16 Gbit"
-    symbolic_name       = "Emulex LPe16002B-E FV1.1.21.8 DV11.0.0.10. HN:(none) OS:Linux"
-    tgtid_bind_type     = "wwpn (World Wide Port Name)"
-    uevent              =
-    vport_create        = <store method only>
-    vport_delete        = <store method only>
-
-    Device = "host9"
-    Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9"
-      uevent              = "DEVTYPE=scsi_host"
-`
+	cmd := s.GetCommand()
+	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+	if(nil != err){
+		return ""
+	}
+	return string(out[:])
 }
 
 func NewHBA() *HBA {
@@ -328,22 +273,3 @@ func RegSplit(text string, delimiter string) []string {
 	return result
 }
 
-func MyTest(m Model) {
-	fmt.Printf("Peter: %s", m.GetValue("target_iqn"))
-}
-
-func main() {
-	list := NewISCSISession().Parse()
-	for i, each := range list {
-		fmt.Printf("target_iqn[%d]: %s\t", i, each.TargetIqn)
-		fmt.Printf("target_portal[%d]: %s\n", i, each.TargetPortal)
-		//MyTest(&each), TODO why cannot
-	}
-	list2 := NewHBA().Parse()
-	for _, each := range list2{
-		fmt.Println(each.Name)
-		fmt.Println(each.FabricName)
-		fmt.Println(each.PortName)
-	}
-
-}

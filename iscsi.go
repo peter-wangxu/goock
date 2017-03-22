@@ -1,4 +1,4 @@
-package main
+package goock
 
 import (
 	"github.com/peter-wangxu/goock/exec"
@@ -9,7 +9,7 @@ import (
 )
 
 type ConnectionProperty struct {
-	TargetIqn       []string
+	TargetIqns       []string
 	TargetPortals   []string
 	TargetLuns      []int
 	StorageProtocol string
@@ -26,23 +26,23 @@ type ISCSIConnector struct {
 	exec exec.Interface
 }
 
-func New() {
+func New() *ISCSIConnector{
 	executor := exec.New()
 	return &ISCSIConnector{
 		exec: executor}
 }
 
-func (iscsi *ISCSIConnector) getConnectorProperties(args []string) (string, error) {
+func (iscsi *ISCSIConnector) getConnectorProperties(args []string) (map[string]string, error) {
 	file_path := "/etc/iscsi/initiatorname.iscsi"
 	cmd := iscsi.exec.Command("cat", file_path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		// Log waring
-		return "", err
+		return map[string]string{}, err
 	}
 	var props map[string]string
 	pattern, err := regexp.Compile("InitiatorName=(?P<name>.*)\n$")
-	matches := pattern.FindStringSubmatch(out)
+	matches := pattern.FindStringSubmatch(string(out))
 	if len(matches) >= 2 {
 		props["initiator"] = matches[1]
 	}
@@ -65,14 +65,14 @@ func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
 }
 
 func (iscsi *ISCSIConnector) getVolumePaths(connectionProperty ConnectionProperty) []string {
-	target_iqns := connectionProperty["target_iqns"]
-	target_portals := connectionProperty["target_luns"]
-	target_luns := connectionProperty["target_luns"]
+	target_iqns := connectionProperty.TargetIqns
+	target_portals := connectionProperty.TargetPortals
+	target_luns := connectionProperty.TargetLuns
 	var potential_paths []string
 	for i, iqn := range target_iqns {
 		path := fmt.Sprintf("/dev/disk/by-path/ip-%s-iscsi-%s-lun-%s",
 			target_portals[i], iqn, target_luns[i])
-		append(potential_paths, path)
+		potential_paths = append(potential_paths, path)
 	}
 	return potential_paths
 
