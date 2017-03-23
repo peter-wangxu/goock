@@ -2,12 +2,16 @@ package model
 
 import (
 	"fmt"
+	"github.com/peter-wangxu/goock/exec"
 	"reflect"
 	"regexp"
-	"github.com/peter-wangxu/goock/exec"
 )
 
 var executor = exec.New()
+
+func SetExecutor(e exec.Interface) {
+	executor = e
+}
 
 type Parser interface {
 	Parse(output string, pat interface{}) []map[string]string
@@ -15,10 +19,12 @@ type Parser interface {
 	splitter() string
 }
 
-type DefaultParser struct {
+// LineParse parse each line as a single data map
+// The data map could be used to initialize a new Object derived from Model
+type LineParser struct {
 }
 
-func (p *DefaultParser) Parse(output string, pat interface{}) []map[string]string {
+func (p *LineParser) Parse(output string, pat interface{}) []map[string]string {
 	pat_str := pat.(string)
 	pattern, _ := regexp.Compile(pat_str)
 	// Split into lines by splitter
@@ -53,11 +59,11 @@ func (p *DefaultParser) Parse(output string, pat interface{}) []map[string]strin
 }
 
 // Returns true if a valid item parsed
-func (p *DefaultParser) filter(item map[string]string) bool {
+func (p *LineParser) filter(item map[string]string) bool {
 	return true
 }
 
-func (p *DefaultParser) splitter() string {
+func (p *LineParser) splitter() string {
 	return "\\n+"
 }
 
@@ -79,7 +85,7 @@ func (f *PairParser) Parse(output string, pat interface{}) []map[string]string {
 	for _, line := range lines {
 		pat_list := pat.([]string)
 		data := make(map[string]string)
-		for _, m_pat := range(pat_list){
+		for _, m_pat := range pat_list {
 			pattern, _ := regexp.Compile(m_pat)
 			re := pattern.FindStringSubmatch(line)
 			if re == nil {
@@ -105,12 +111,12 @@ func (f *PairParser) filter(item map[string]string) bool {
 }
 
 func (f *PairParser) splitter() string {
-	return "\\n{2,}"
+	return "\\n{3,}"
 }
 
 // Model declaration
 type Model interface {
-	GetPattern()  interface{}
+	GetPattern() interface{}
 	GetCommand() []string
 	getOutput() string
 	GetValue(key string) string
@@ -144,18 +150,15 @@ func (iscsi *ISCSISession) GetValue(key string) string {
 func (iscsi *ISCSISession) setValue(key string, value string) {
 	ref := reflect.ValueOf(iscsi).Elem()
 	field := ref.FieldByName(key)
-	if field.IsValid() && field.CanSet(){
+	if field.IsValid() && field.CanSet() {
 		ref.FieldByName(key).SetString(value)
 	} else {
 		fmt.Println("Invalid property name: ", key)
 	}
 
-
-
 }
 
 func (iscsi *ISCSISession) Parse() []ISCSISession {
-	// Why successful?
 	parser := iscsi.parser
 	data_list := parser.Parse(iscsi.getOutput(), iscsi.GetPattern())
 	list := make([]ISCSISession, len(data_list))
@@ -172,17 +175,16 @@ func (iscsi *ISCSISession) Parse() []ISCSISession {
 func (iscsi *ISCSISession) getOutput() string {
 	cmd := iscsi.GetCommand()
 	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
-	if(nil != err){
+	if nil != err {
 		return ""
 	}
 	return string(out[:])
 }
 func NewISCSISession() *ISCSISession {
-	return &ISCSISession{parser: &DefaultParser{}}
+	return &ISCSISession{parser: &LineParser{}}
 }
 
 // end of implementation of ISCSISession
-
 
 // (HBA) Subclass of Model
 type HBA struct {
@@ -195,16 +197,15 @@ type HBA struct {
 	PortState       string
 	Speed           string
 	SupportedSpeeds string
-	DevicePath 	string
+	DevicePath      string
 	parser          Parser
-
 }
 
 func (s *HBA) GetPattern() interface{} {
 
 	return []string{
-		"^Class Device path\\s+=\\s+\"(?P<DevicePath>.*)\"",
-		"^\\s+Device\\s+=\\s+\"(?P<Name>.*)\"",
+		"Class Device\\s+=\\s+\"(?P<Name>.*)\"",
+		"Class Device path\\s+=\\s+\"(?P<DevicePath>.*)\"",
 		"fabric_name\\s+=\\s+\"(?P<FabricName>.*)\"",
 		"node_name\\s+=\\s+\"(?P<NodeName>.*)\"",
 		"port_name\\s+=\\s+\"(?P<PortName>.*)\"",
@@ -249,7 +250,7 @@ func (s *HBA) Parse() []HBA {
 func (s *HBA) getOutput() string {
 	cmd := s.GetCommand()
 	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
-	if(nil != err){
+	if nil != err {
 		return ""
 	}
 	return string(out[:])
@@ -272,4 +273,3 @@ func RegSplit(text string, delimiter string) []string {
 	result[len(indexes)] = text[lastStart:len(text)]
 	return result
 }
-

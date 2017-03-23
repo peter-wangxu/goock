@@ -1,15 +1,15 @@
 package goock
 
 import (
-	"github.com/peter-wangxu/goock/exec"
-	"github.com/peter-wangxu/goock/model"
-	"github.com/peter-wangxu/goock/linux"
 	"fmt"
+	"github.com/peter-wangxu/goock/exec"
+	"github.com/peter-wangxu/goock/linux"
+	"github.com/peter-wangxu/goock/model"
 	"regexp"
 )
 
 type ConnectionProperty struct {
-	TargetIqns       []string
+	TargetIqns      []string
 	TargetPortals   []string
 	TargetLuns      []int
 	StorageProtocol string
@@ -26,7 +26,7 @@ type ISCSIConnector struct {
 	exec exec.Interface
 }
 
-func New() *ISCSIConnector{
+func New() *ISCSIConnector {
 	executor := exec.New()
 	return &ISCSIConnector{
 		exec: executor}
@@ -58,9 +58,8 @@ func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
 	// parse the output from iscsiadm
 	// lines are in the format of
 	// tcp: [1] 192.168.121.250:3260,1 iqn.2010-10.org.openstack:volume-
-	iscsiSession :=  model.NewISCSISession()
+	iscsiSession := model.NewISCSISession()
 	return iscsiSession.Parse()
-
 
 }
 

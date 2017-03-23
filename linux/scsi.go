@@ -1,19 +1,23 @@
 package linux
 
-import ("github.com/peter-wangxu/goock/exec"
-	"strings"
+import (
+	"fmt"
+	"github.com/Sirupsen/logrus"
+	"github.com/peter-wangxu/goock/exec"
 	"regexp"
 	"strconv"
-	"github.com/Sirupsen/logrus"
-	"fmt"
+	"strings"
 )
 
 var executor = exec.New()
 
+func SetExecutor(e exec.Interface) {
+	executor = e
+}
 
 func GetWWN(path string) string {
 	output, _ := executor.Command("/lib/udev/scsi_id", "--page", "0x83",
-				      "--whitelisted", path).CombinedOutput()
+		"--whitelisted", path).CombinedOutput()
 	return strings.Trim(string(output), " ")
 }
 
@@ -37,10 +41,10 @@ func CheckReadWrite(path string, wwn string) bool {
 	output, _ := executor.Command("lsblk", "-o", "NAME,RO", "-l", "-n").CombinedOutput()
 	pattern, _ := regexp.Compile("(\\w+)\\s+([01])\\s?")
 	results := pattern.FindAllStringSubmatch(string(output), -1)
-	for _, result := range(results){
+	for _, result := range results {
 		k, v := result[1], result[2]
-		if(k == path || k == wwn) {
-			if(strings.Contains(v, "0")){
+		if k == path || k == wwn {
+			if strings.Contains(v, "0") {
 				return false
 			}
 		}
@@ -51,11 +55,11 @@ func CheckReadWrite(path string, wwn string) bool {
 // Get block device size
 func GetDeviceSize(path string) int {
 	output, err := executor.Command("blockdev", "--getsize64", path).CombinedOutput()
-	if(nil != err){
+	if nil != err {
 		logrus.WithError(err).Warn("Unable to get size of device %s", path)
 	}
 	trimmed := strings.Trim(string(output), " ")
-	if(trimmed == ""){
+	if trimmed == "" {
 		return 0
 	}
 	i, _ := strconv.Atoi(trimmed)
@@ -63,23 +67,29 @@ func GetDeviceSize(path string) int {
 }
 
 // use echo "c t l" > to /sys/class/scsi_host/%s/scan
-func ScanSCSIBus(path string, content string) {
-	if(content == "") {
+func ScanSCSIBus(path string, content string) error {
+	if content == "" {
 		// "hba_channel target_id target_lun"
 		content = "- - -"
 	}
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader(content))
-	cmd.CombinedOutput()
+	_, err := cmd.CombinedOutput()
+	if(err != nil){
+		logrus.WithError(err).Warn("Rescan Bus failed")
+
+	}
+	return err
+
 }
 
 // Use echo 1 > /sys/block/%s/device/delete to force delete the device
 func RemoveSCSIDevice(path string) {
-	if(!strings.Contains(path, "/")){
+	if !strings.Contains(path, "/") {
 		path = fmt.Sprintf("/sys/block/%s/device/delete", path)
 	}
 
-	cmd := executor.Command("tee", "-a",  path)
+	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader("1"))
 	cmd.CombinedOutput()
 }
