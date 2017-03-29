@@ -1,0 +1,31 @@
+reload: 360060160129038006d013f8f70dce611 undef DGC,VRAID
+size=1.0G features='1 queue_if_no_path' hwhandler='1 alua' wp=undef
+|-+- policy='round-robin 0' prio=50 status=undef
+| `- 11:0:0:203 sdbq 68:64  active ready  running
+`-+- policy='round-robin 0' prio=10 status=undef
+  |- 9:0:1:203  sdaf 65:240 active ready  running
+  |- 12:0:0:203 sdbs 68:96  active ready  running
+  `- 9:0:3:203  sdbj 67:208 active ready  running
+Mar 26 04:48:54 | sdbe: alua not supported
+Mar 26 04:48:54 | sddi: alua not supported
+Mar 26 04:48:54 | sddj: alua not supported
+Mar 26 04:48:54 | DM message failed [queue_if_no_path]
+reject: 360060160129038001776c518e30fe711 undef DGC,VRAID
+size=2.0G features='1 queue_if_no_path' hwhandler='1 alua' wp=undef
+`-+- policy='round-robin 0' prio=0 status=undef
+  |- 9:0:1:221  sdbe 67:128 undef faulty running
+  |- 11:0:0:221 sddi 71:0   undef faulty running
+  `- 12:0:0:221 sddj 71:16  undef faulty running
+reload: 3600601601290380037009547f0f7e611 undef DGC,VRAID
+size=2.0G features='1 queue_if_no_path' hwhandler='1 alua' wp=undef
+|-+- policy='round-robin 0' prio=50 status=undef
+| `- 11:0:0:58  sdbo 68:32  active ready  running
+`-+- policy='round-robin 0' prio=10 status=undef
+  |- 9:0:1:58   sdad 65:208 active ready  running
+  |- 12:0:0:58  sdbn 68:16  active ready  running
+  `- 9:0:3:58   sdbh 67:176 active ready  running
+Mar 26 04:48:54 | sdcw: alua not supported
+Mar 26 04:48:54 | sdcz: alua not supported
+Mar 26 04:48:54 | sddb: alua not supported
+Mar 26 04:48:54 | DM message failed [queue_if_no_path]
+reject: 36006016012903800cc113d124f0ee711 undef DGC,VRAID
