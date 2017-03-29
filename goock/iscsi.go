@@ -1,18 +1,17 @@
-package goock
+package iscsi
 
 import (
+	"exec"
 	"fmt"
-	"github.com/peter-wangxu/goock/exec"
-	"github.com/peter-wangxu/goock/linux"
-	"github.com/peter-wangxu/goock/model"
 	"regexp"
+	"strings"
 )
 
 type ConnectionProperty struct {
-	TargetIqns      []string
-	TargetPortals   []string
-	TargetLuns      []int
-	StorageProtocol string
+	target_iqns     []string
+	target_portals  []string
+	target_luns     []int
+	storge_protocal string
 }
 
 const (
@@ -26,23 +25,23 @@ type ISCSIConnector struct {
 	exec exec.Interface
 }
 
-func New() *ISCSIConnector {
+func New(exec exec.Interface) {
 	executor := exec.New()
 	return &ISCSIConnector{
 		exec: executor}
 }
 
-func (iscsi *ISCSIConnector) getConnectorProperties(args []string) (map[string]string, error) {
+func (c *ISCSIConnector) getConnectorProperties(args []string) (string, error) {
 	file_path := "/etc/iscsi/initiatorname.iscsi"
-	cmd := iscsi.exec.Command("cat", file_path)
+	cmd := c.exec.Cmd("cat", file_path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		// Log waring
-		return map[string]string{}, err
+		return "", err
 	}
 	var props map[string]string
 	pattern, err := regexp.Compile("InitiatorName=(?P<name>.*)\n$")
-	matches := pattern.FindStringSubmatch(string(out))
+	matches := pattern.FindStringSubmatch(out)
 	if len(matches) >= 2 {
 		props["initiator"] = matches[1]
 	}
@@ -50,59 +49,70 @@ func (iscsi *ISCSIConnector) getConnectorProperties(args []string) (map[string]s
 	return props, nil
 
 }
-func (iscsi *ISCSIConnector) getSearchPath() string {
+func (c *ISCSIConnector) getSearchPath() string {
 	return "/dev/disk/by-path/"
 }
 
-func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
+func (c *ISCSIConnector) getIscsiSessions() []map[string]string {
+	cmd := c.exec.Command(iscsiadm, "-m", "session")
+	out, err := cmd.Output()
 	// parse the output from iscsiadm
 	// lines are in the format of
 	// tcp: [1] 192.168.121.250:3260,1 iqn.2010-10.org.openstack:volume-
-	iscsiSession := model.NewISCSISession()
-	return iscsiSession.Parse()
-
+	if err != nil {
+		// log warning
+	}
+	var session_maps []map[string]string
+	sessions := strings.Fileds(out)
+	for i, s := range sessions {
+		se := strings.Fields(s)
+		m = map[string]string{
+			"target_portal": strings.Split(se[2], ",")[0],
+			"target_iqn":    se[3],
+		}
+		append(session_maps, m)
+	}
+	return session_maps
 }
 
-func (iscsi *ISCSIConnector) getVolumePaths(connectionProperty ConnectionProperty) []string {
-	target_iqns := connectionProperty.TargetIqns
-	target_portals := connectionProperty.TargetPortals
-	target_luns := connectionProperty.TargetLuns
-	var potential_paths []string
+func (c *ISCSIConnector) getVolumePaths(connection_properties ConnectionProperty) []string {
+	target_iqns := connection_properties["target_iqns"]
+	target_portals := connection_properties["target_luns"]
+	target_luns := connection_properties["target_luns"]
+	var potentail_paths []string
 	for i, iqn := range target_iqns {
 		path := fmt.Sprintf("/dev/disk/by-path/ip-%s-iscsi-%s-lun-%s",
 			target_portals[i], iqn, target_luns[i])
-		potential_paths = append(potential_paths, path)
+		append(potentail_paths, path)
 	}
-	return potential_paths
+	return potentail_paths
 
 }
 
-func (iscsi *ISCSIConnector) validateIfaceTransport(transportIface string) string {
+func (c *ISCSIConnector) validateIfaceTransport(transport_iface string) string {
 	// TODO need to support multiple transports?
-	return ""
 }
 
 // Discover all target portals
-func (iscsi *ISCSIConnector) discoverISCSIPortal(targetPortal string) []model.ISCSISession {
-	// Parse output like 10.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae5ef3.h1
-	//iscsiSessions := model.NewISCSISession()
-	return nil
-
-}
-
-// Update the local kernel's size information
-func (iscsi *ISCSIConnector) ExtendVolume(connectionProperty ConnectionProperty) {
-
-	paths := iscsi.getVolumePaths(connectionProperty)
-	for _, path := range paths {
-		// TODO extend every path via scsi command
-		linux.ExtendDevice(path)
+func (c *ISCSIConnector) discoverIscsiPortal(target_portal string) []string {
+	cmd = c.exec.Command(iscsiadm, "-m", "discovery", "-t", "sendtargets",
+		"-p", target_portal)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		// LOG warning here
 	}
-	// TODO extend multipath device again
-	mpathId := linux.GetWWN(paths[0])
-	linux.ResizeMpath(mpathId)
+	// Parse output like 10.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae5ef3.h1
+	// TODO add common parser for the output
 }
 
+// func (c *ISCSIConnector) set_execute(self, execute){
+// }
+// func (c *ISCSIConnector) _validate_iface_transport(self, transport_iface){
+// }
+// func (c *ISCSIConnector) _get_transport(self){
+// }
+// func (c *ISCSIConnector) _discover_iscsi_portals(self, connection_properties){
+// }
 // func (c *ISCSIConnector) _run_iscsiadm_update_discoverydb(self, connection_properties,
 // func (c *ISCSIConnector) extend_volume(self, connection_properties){
 // }
