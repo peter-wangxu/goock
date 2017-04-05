@@ -18,7 +18,6 @@ func TestFlushPath(t *testing.T) {
 func TestGetPaths(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 
-
 }
 
 func TestReconfigure(t *testing.T) {
@@ -34,11 +33,9 @@ func TestReload(t *testing.T) {
 
 }
 
-
 func TestCheckDevice(t *testing.T) {
 
 }
-
 
 func TestResizeMpath(t *testing.T) {
 

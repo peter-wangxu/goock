@@ -22,10 +22,9 @@ import (
 	"runtime"
 )
 
-
-func skipIfWindows(t *testing.T){
+func skipIfWindows(t *testing.T) {
 	osName := runtime.GOOS
-	if(osName == "windows"){
+	if (osName == "windows") {
 		t.Skip("Test case is skipped, as it's for non-windows platform.")
 	}
 }

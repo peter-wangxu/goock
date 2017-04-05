@@ -71,6 +71,7 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 		fmt.Printf("Unable to read mock data from file %s, default to empty string.\n", fileName)
 		return []byte(""), nil
 	}
+	fmt.Printf("Reading mock file: %s\n", fileName)
 	fstate, _ := file.Stat()
 	fsize := fstate.Size()
 	mock_data := make([]byte, fsize)
@@ -83,9 +84,9 @@ func getMockDir() string {
 	goPath := os.Getenv("GOPATH")
 	goPath = strings.Split(goPath, string(os.PathListSeparator))[0]
 	var goProject string
-	if(goPath == "") {
+	if (goPath == "") {
 		goProject, _ = os.Getwd()
-	} else{
+	} else {
 		goProject = fmt.Sprintf("%s/src/github.com/peter-wangxu/goock", goPath)
 	}
 

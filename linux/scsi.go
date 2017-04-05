@@ -75,7 +75,7 @@ func ScanSCSIBus(path string, content string) error {
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader(content))
 	_, err := cmd.CombinedOutput()
-	if(err != nil){
+	if (err != nil) {
 		logrus.WithError(err).Warn("Rescan Bus failed")
 
 	}
