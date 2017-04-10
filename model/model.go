@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/peter-wangxu/goock/exec"
 	"reflect"
 	"regexp"
@@ -134,6 +133,7 @@ type Model interface {
 // Implementation of ISCSISession
 type ISCSISession struct {
 	dataMap      map[string]string
+	params       []string
 	TargetIqn    string
 	TargetPortal string
 	TargetIp     string
@@ -146,7 +146,12 @@ func (iscsi *ISCSISession) GetPattern() interface{} {
 }
 
 func (iscsi *ISCSISession) GetCommand() []string {
-	return []string{"iscsiadm", "-m", "session"}
+	if (len(iscsi.params) == 0) {
+
+		return []string{"iscsiadm", "-m", "session"}
+	} else {
+		return append([]string{"iscsiadm"}, iscsi.params...)
+	}
 }
 
 func (iscsi *ISCSISession) GetValue(key string) interface{} {
@@ -155,13 +160,7 @@ func (iscsi *ISCSISession) GetValue(key string) interface{} {
 
 func (iscsi *ISCSISession) setValue(key string, value interface{}) {
 	ref := reflect.ValueOf(iscsi).Elem()
-	field := ref.FieldByName(key)
-	if field.IsValid() && field.CanSet() {
-		//ref.FieldByName(key).Set(value)
-		SetValue(ref.FieldByName(key), value)
-	} else {
-		fmt.Println("Invalid property name: ", key)
-	}
+	SetValue(ref.FieldByName(key), value)
 
 }
 
@@ -187,8 +186,36 @@ func (iscsi *ISCSISession) getOutput() string {
 	}
 	return string(out[:])
 }
-func NewISCSISession() *ISCSISession {
-	return &ISCSISession{parser: &LineParser{Delimiter:"\\n+"}}
+func NewISCSISession() []ISCSISession {
+	return (&ISCSISession{parser: &LineParser{Delimiter:"\\n+"}}).Parse()
+}
+
+// Discover all the targets provided by targetPortals
+// Use goroutine to accelerate the target discovery process.
+
+func DiscoverISCSISession(targetPortals []string) []ISCSISession {
+	var results []ISCSISession
+	c := make(chan []ISCSISession, len(targetPortals))
+	for _, portal := range targetPortals {
+		discovery := []string{
+			"-m", "discovery", "-t", "sendtargets", "-I", "default", "-p", portal,
+		}
+		go func() {
+			session := ISCSISession{parser:&LineParser{Delimiter:"\\n+"}}
+			session.params = discovery
+			ret := session.Parse()
+			// Aggregate the results
+			c <- ret
+		}()
+
+	}
+	// Wait for all discovery
+	for i := 0; i < len(targetPortals); i++ {
+		each := <- c
+		results = append(results, each...)
+		logrus.Debug("Discover result found for target: ", each)
+	}
+	return results
 }
 
 // end of implementation of ISCSISession
@@ -232,12 +259,7 @@ func (s *HBA) GetValue(key string) interface{} {
 
 func (s *HBA) setValue(key string, value interface{}) {
 	ref := reflect.ValueOf(s).Elem()
-	if ref.FieldByName(key).CanSet() {
-		//ref.FieldByName(key).Set(value)
-		SetValue(ref.FieldByName(key), value)
-	} else {
-		fmt.Println("Invalid property sepecified.")
-	}
+	SetValue(ref.FieldByName(key), value)
 }
 
 func (s *HBA) Parse() []HBA {
@@ -263,8 +285,8 @@ func (s *HBA) getOutput() string {
 	return string(out[:])
 }
 
-func NewHBA() *HBA {
-	return &HBA{parser: &PairParser{Delimiter:"\\n{3,}"}}
+func NewHBA() []HBA {
+	return (&HBA{parser: &PairParser{Delimiter:"\\n{3,}"}}).Parse()
 }
 
 // (Multipath) Subclass of Model
@@ -272,6 +294,7 @@ func NewHBA() *HBA {
 type Multipath struct {
 	dataMap         map[string]string
 	parser          Parser
+	params          []string
 	// reload or reject
 	Action          string
 	Wwn             string
@@ -291,7 +314,11 @@ func (s *Multipath) GetPattern() interface{} {
 }
 
 func (s *Multipath) GetCommand() []string {
-	return []string{"multipath", "-ll"}
+	if (len(s.params) == 0) {
+		return []string{"multipath", "-ll"}
+	} else {
+		return append([]string{"multipath"}, s.params...)
+	}
 }
 
 func (s *Multipath) GetValue(key string) interface{} {
@@ -300,11 +327,7 @@ func (s *Multipath) GetValue(key string) interface{} {
 
 func (s *Multipath) setValue(key string, value interface{}) {
 	ref := reflect.ValueOf(s).Elem()
-	if ref.FieldByName(key).CanSet() {
-		SetValue(ref.FieldByName(key), value)
-	} else {
-		fmt.Println("Invalid property sepecified.")
-	}
+	SetValue(ref.FieldByName(key), value)
 }
 
 func (s *Multipath) Parse() []Multipath {
@@ -319,7 +342,7 @@ func (s *Multipath) Parse() []Multipath {
 			s.setValue(k, v)
 		}
 		// SinglePath
-		s.Paths = NewSinglePath(pathGroups[i]).Parse()
+		s.Paths = NewSinglePath(pathGroups[i])
 		list[i] = *s
 	}
 	return list
@@ -334,10 +357,19 @@ func (s *Multipath) getOutput() string {
 	return string(out[:])
 }
 
-func NewMultipath() *Multipath {
-	return &Multipath{parser: &LineParser{Matcher:"(\\w+:\\s+)?\\w{33}"}}
+func (s *Multipath) SetParams(params []string) {
+	s.params = params
 }
 
+func NewMultipath() []Multipath {
+	return (&Multipath{parser: &LineParser{Matcher:"(\\w+:\\s+)?\\w{33}"}}).Parse()
+}
+
+func FindMultipath(path string) []Multipath {
+	m := &Multipath{parser: &LineParser{Matcher:"(\\w+:\\s+)?\\w{33}"}}
+	m.SetParams([]string{"-l", path})
+	return m.Parse()
+}
 // (SinglePath) Subclass of Model
 type SinglePath struct {
 	dataMap      map[string]string
@@ -383,11 +415,7 @@ func (single *SinglePath) GetValue(key string) interface{} {
 
 func (single *SinglePath) setValue(key string, value interface{}) {
 	ref := reflect.ValueOf(single).Elem()
-	if ref.FieldByName(key).CanSet() {
-		SetValue(ref.FieldByName(key), value)
-	} else {
-		fmt.Println("Invalid property sepecified.")
-	}
+	SetValue(ref.FieldByName(key), value)
 }
 
 func (single *SinglePath) setParser(parser Parser) {
@@ -408,12 +436,79 @@ func (single *SinglePath) Parse() []SinglePath {
 	return list
 }
 
-func NewSinglePath(output string) *SinglePath {
+func NewSinglePath(output string) []SinglePath {
 	rS := &SinglePath{parser: &LineParser{Delimiter:"\\n+"}}
 	rS.SetOutput(output)
-	return rS
+	return rS.Parse()
 }
 
+// DeviceInfo: subclass of Model
+
+type DeviceInfo struct {
+	dataMap    map[string]string
+	parser     Parser
+	params     []string
+	Device     string
+	Host       string
+	// numbered host
+	HostNumber int
+	Channel    int
+	Target     int
+	Lun        int
+}
+
+func (d *DeviceInfo) GetPattern() interface{} {
+	return `(?P<Device>.*):\s+(?P<Host>\w+)\s+channel=(?P<Channel>\d+)\s+id=(?P<Target>\d+)\s+lun=(?P<Lun>\d+)`
+}
+
+func (d *DeviceInfo) GetCommand() []string {
+	if (len(d.params) <= 0) {
+		return []string{"sg_scan"}
+	} else {
+		return append([]string{"sg_scan"}, d.params...)
+	}
+}
+
+func (d *DeviceInfo) getOutput() string {
+	cmd := d.GetCommand()
+	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+	if nil != err {
+		logrus.Debug("Failed to get device info: ", out)
+	}
+	return string(out[:])
+}
+
+func (d *DeviceInfo) GetValue(key string) interface{} {
+	return d.dataMap[key]
+}
+
+func (d *DeviceInfo) setValue(key string, value interface{}) {
+	ref := reflect.ValueOf(d).Elem()
+	SetValue(ref.FieldByName(key), value)
+}
+
+func (d *DeviceInfo) setParser(parser Parser) {
+	d.parser = parser
+}
+
+func (d *DeviceInfo) Parse() []DeviceInfo {
+	parser := d.parser
+	dataList := parser.Parse(d.getOutput(), d.GetPattern())
+	list := make([]DeviceInfo, len(dataList))
+	for i, each := range dataList {
+		s := &DeviceInfo{}
+		for k, v := range each {
+			s.setValue(k, v)
+		}
+		list[i] = *s
+	}
+	return list
+}
+
+func NewDeviceInfo(path string) []DeviceInfo {
+	rS := &DeviceInfo{parser: &LineParser{Delimiter:"\\n+"}, params:[]string{path}}
+	return rS.Parse()
+}
 // Split by regexp specified by delimiter
 func RegSplit(text string, delimiter string) []string {
 	reg := regexp.MustCompile(delimiter)
@@ -451,29 +546,35 @@ func RegMatcher(text string, matcher string) []string {
 }
 
 func SetValue(field reflect.Value, value interface{}) {
-	switch field.Kind() {
-	case reflect.Int:
-		i, err := strconv.ParseInt(value.(string), 10, 64)
-		if (err != nil) {
-			i = 0
-		}
-		field.SetInt(i)
-	case reflect.Float64:
-		f, err := strconv.ParseFloat(value.(string), 2)
-		if (err != nil) {
-			f = 0.0
-		}
-		field.SetFloat(f)
-	case reflect.String:
-		field.SetString(value.(string))
+	if (field.CanSet()) {
+		switch field.Kind() {
+		case reflect.Int:
+			i, err := strconv.ParseInt(value.(string), 10, 64)
+			if (err != nil) {
+				i = 0
+			}
+			field.SetInt(i)
+		case reflect.Float64:
+			f, err := strconv.ParseFloat(value.(string), 2)
+			if (err != nil) {
+				f = 0.0
+			}
+			field.SetFloat(f)
+		case reflect.String:
+			field.SetString(value.(string))
 
-	case reflect.Bool:
-		b, err := strconv.ParseBool(value.(string))
-		if (err != nil) {
-			b = false
+		case reflect.Bool:
+			b, err := strconv.ParseBool(value.(string))
+			if (err != nil) {
+				b = false
+			}
+			field.SetBool(b)
+		default:
+			logrus.Debug("Unsupported data type ", value, "for field ", field.String())
 		}
-		field.SetBool(b)
-	default:
-		logrus.Debug("Unsupported data type ", value, "for field ", field.String())
+	} else {
+
+		logrus.Debugf("Invalid value [%v] specified for property [%s]", value, field.String())
 	}
 }
+

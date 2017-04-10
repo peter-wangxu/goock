@@ -1,0 +1,2 @@
+0
+/dev/sdb: scsi0 channel=1 id=0 lun=0 [em]

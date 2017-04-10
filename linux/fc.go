@@ -3,12 +3,12 @@ package linux
 import (
 	"fmt"
 	"github.com/peter-wangxu/goock/model"
-	"os"
 	"strings"
+	"github.com/peter-wangxu/goock/util"
 )
 
 func IsFCSupport() bool {
-	_, err := os.Stat("/sys/class/fc_host")
+	err := util.IsPathExists("/sys/class/fc_host")
 	if nil != err {
 		return false
 	}
@@ -16,7 +16,7 @@ func IsFCSupport() bool {
 }
 
 func GetFCHBA() []model.HBA {
-	return model.NewHBA().Parse()
+	return model.NewHBA()
 }
 
 func GetFCWWPN() []string {

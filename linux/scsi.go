@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"github.com/peter-wangxu/goock/model"
 )
 
 var executor = exec.New()
@@ -41,15 +42,18 @@ func CheckReadWrite(path string, wwn string) bool {
 	output, _ := executor.Command("lsblk", "-o", "NAME,RO", "-l", "-n").CombinedOutput()
 	pattern, _ := regexp.Compile("(\\w+)\\s+([01])\\s?")
 	results := pattern.FindAllStringSubmatch(string(output), -1)
+	readWrite := false
 	for _, result := range results {
 		k, v := result[1], result[2]
 		if k == path || k == wwn {
-			if strings.Contains(v, "0") {
-				return false
+			if strings.Contains(v, "1") {
+				readWrite = false
+			} else {
+				readWrite = true
 			}
 		}
 	}
-	return true
+	return readWrite
 }
 
 // Get block device size
@@ -94,7 +98,26 @@ func RemoveSCSIDevice(path string) {
 	cmd.CombinedOutput()
 }
 
-//TODO fix this after adding UT
-func ExtendDevice(path string) bool {
-	return true
+//TODO Add echo_scsi_command for use
+func ExtendDevice(path string) error {
+
+	return nil
 }
+// output:
+// sudo sg_scan /dev/disk/by-path/pci-0000:05:00.1-fc-0x5006016d09200925-lun-0
+// /dev/disk/by-path/pci-0000:05:00.1-fc-0x5006016d09200925-lun-0: scsi9 channel=0 id=0 lun=0 [em]
+func GetDeviceInfo(path string) model.DeviceInfo {
+	devices := model.NewDeviceInfo(path)
+	if (len(devices) <= 0) {
+		logrus.Warn("Unable to get device info for device ", path)
+		return model.DeviceInfo{}
+	}
+	return devices[0]
+}
+
+// TODO Add the commands here
+// Force the scsi bus to rescan the size/any attribute for the device
+func RescanDevice(path string) {
+
+}
+

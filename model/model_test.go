@@ -12,7 +12,7 @@ func TestNewHBA(t *testing.T) {
 	defer func() {
 		executor = old
 	}()
-	hbas := NewHBA().Parse()
+	hbas := NewHBA()
 	assert.Equal(t, "host7", hbas[0].Name)
 	assert.Equal(t, "0x10000090fa534cd0", hbas[0].PortName)
 	assert.Equal(t, 2, len(hbas))
@@ -24,7 +24,7 @@ func TestNewISCSISession(t *testing.T) {
 	defer func() {
 		executor = old
 	}()
-	sessions := NewISCSISession().Parse()
+	sessions := NewISCSISession()
 	assert.Equal(t, 2, len(sessions))
 	assert.Contains(t, sessions[1].TargetIqn, "iqn.1992-04.com.emc:cx.fcnch097ae6ef3")
 }
@@ -35,7 +35,7 @@ func TestNewMultipath(t *testing.T) {
 	defer func() {
 		executor = old
 	}()
-	multipaths := NewMultipath().Parse()
+	multipaths := NewMultipath()
 	assert.Equal(t, 5, len(multipaths))
 	m := multipaths[0]
 	assert.Equal(t, "36006016074e03a003dbe2a580510610a", m.Wwn)
@@ -52,6 +52,34 @@ func TestNewMultipath(t *testing.T) {
 	assert.Equal(t, "reload", m1.Action)
 }
 
+
+func TestDiscoverISCSISession(t *testing.T) {
+
+	old := executor
+	executor = test.NewMockExecutor()
+	defer func() {
+		executor = old
+	}()
+	discovered := DiscoverISCSISession([]string{"10.244.213.177", "10.244.213.179"})
+	assert.Len(t, discovered, 4)
+	assert.Equal(t, "iqn.1992-04.com.emc:cx.fnm00150600267.a0", discovered[0].TargetIqn)
+	assert.Equal(t, "10.244.213.177:3260", discovered[0].TargetPortal)
+	assert.Equal(t, "2", discovered[0].Tag)
+}
+func TestNewDeviceInfo(t *testing.T) {
+	old := executor
+	executor = test.NewMockExecutor()
+	defer func() {
+		executor = old
+	}()
+	devices := NewDeviceInfo("/dev/sdb")
+	assert.Len(t, devices, 1)
+	assert.Equal(t, devices[0].Device, "/dev/sdb")
+	assert.Equal(t, devices[0].Host, "scsi0")
+	assert.Equal(t, devices[0].Channel, 1)
+	assert.Equal(t, devices[0].Target, 0)
+	assert.Equal(t, devices[0].Lun, 0)
+}
 func TestRegSplit(t *testing.T) {
 	var s = `|-+- policy='round-robin 0' prio=50 status=active
 		 | -- 9:0:0:10   sdm  8:192   active ready  running

@@ -1,0 +1,7 @@
+0
+path checker states:
+up                  9
+
+paths: 1
+busy: False
+
