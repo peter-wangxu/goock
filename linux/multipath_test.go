@@ -34,6 +34,12 @@ func TestReload(t *testing.T) {
 }
 
 func TestCheckDevice(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	var ret = CheckDevice("/dev/sdx")
+	assert.Equal(t, true, ret, "The return of CheckDevice is not true.")
+
+	ret = CheckDevice("/dev/invalid/path")
+	assert.Equal(t, false, ret)
 
 }
 

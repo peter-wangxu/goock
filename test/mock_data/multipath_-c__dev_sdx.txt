@@ -1,0 +1,2 @@
+0
+/dev/sdx is a valid multipath device path

@@ -1,10 +1,10 @@
 package linux
 
 import (
-	"github.com/stretchr/testify/assert"
-	"testing"
 	"github.com/peter-wangxu/goock/model"
 	"github.com/peter-wangxu/goock/test"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestIsFCSupport(t *testing.T) {
