@@ -7,6 +7,10 @@ import (
 	"io"
 	"os"
 	"strings"
+	"bufio"
+	"log"
+	"bytes"
+	"errors"
 )
 
 type MockExecutor struct {
@@ -66,17 +70,43 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 	fileName = strings.Replace(fileName, "/", "_", -1)
 	fileName = strings.Replace(fileName, "\\", "_", -1)
 	fileName = fmt.Sprintf("%s%s.txt", getMockDir(), fileName)
-	file, err := os.Open(fileName)
-	if nil != err {
+
+	// open a file
+	if file, err := os.Open(fileName); err == nil {
+
+		// make sure it gets closed
+		defer file.Close()
+		fmt.Printf("Reading mock file: %s\n", fileName)
+
+		// create a new scanner and read the file line by line
+		scanner := bufio.NewScanner(file)
+		var buffer bytes.Buffer
+		cmdStatus := "-1"
+		isFirstLine := true
+		for scanner.Scan() {
+			if isFirstLine {
+				cmdStatus = scanner.Text()
+				isFirstLine = false
+			} else {
+				buffer.WriteString(scanner.Text() + "\n")
+			}
+		}
+		// check for errors
+		if err = scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+		if cmdStatus == "0" {
+			return []byte(buffer.String()), nil
+		} else {
+			cmdError := errors.New("Status code is "+ cmdStatus)
+			return []byte(buffer.String()), cmdError
+		}
+
+	} else {
 		fmt.Printf("Unable to read mock data from file %s, default to empty string.\n", fileName)
 		return []byte(""), nil
 	}
-	fmt.Printf("Reading mock file: %s\n", fileName)
-	fstate, _ := file.Stat()
-	fsize := fstate.Size()
-	mock_data := make([]byte, fsize)
-	file.Read(mock_data)
-	return mock_data, nil
+
 
 }
 

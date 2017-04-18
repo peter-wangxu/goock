@@ -1,3 +1,4 @@
+0
 Class = "fc_host"
 
   Class Device = "host7"

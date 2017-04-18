@@ -1,3 +1,4 @@
+0
 36006016074e03a003dbe2a580510610a dm-17 DGC,VRAID
 size=1.0G features='2 queue_if_no_path retain_attached_hw_handler' hwhandler='1 alua' wp=rw
 |-+- policy='round-robin 0' prio=50 status=active
@@ -32,4 +33,3 @@ size=1.0G features='1 queue_if_no_path' hwhandler='1 alua' wp=undef
   |- 9:0:1:203  sdaf 65:240  active ready  running
   |- 12:0:0:203 sdbs 68:96   active ready  running
   `- 9:0:3:203  sdbj 67:208  active ready  running
-

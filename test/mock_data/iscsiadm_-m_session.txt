@@ -1,3 +1,4 @@
+0
 10.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae5ef3.h1
 11.64.76.253:3260,1 iqn.1992-04.com.emc:cx.fcnch097ae6ef3.h2
 asdfasd
