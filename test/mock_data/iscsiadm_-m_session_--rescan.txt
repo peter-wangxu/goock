@@ -1,0 +1,6 @@
+0
+Rescanning session [sid: 1, target: iqn.1992-04.com.emc:cx.fnm00131001798.a0, portal: 10.109.14.85,3260]
+Rescanning session [sid: 2, target: iqn.1992-04.com.emc:cx.apm00152904558.b12, portal: 192.168.3.50,3260]
+Rescanning session [sid: 3, target: iqn.1992-04.com.emc:cx.apm00152904558.a12, portal: 192.168.3.49,3260]
+Rescanning session [sid: 4, target: iqn.1992-04.com.emc:cx.apm00150602415.a0, portal: 192.168.1.59,3260]
+Rescanning session [sid: 5, target: iqn.1992-04.com.emc:cx.virt1712zttk8l.a0, portal: 10.244.209.7,3260]

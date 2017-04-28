@@ -6,6 +6,12 @@ import (
 	"github.com/peter-wangxu/goock/test"
 )
 
+func TestIsMultipathEnabled(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	enabled := IsMultipathEnabled()
+	assert.True(t, enabled)
+}
+
 func TestFlushPath(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	err := FlushPath("36006016074e03a00ee762958673eaf1b")
@@ -38,9 +44,12 @@ func TestCheckDevice(t *testing.T) {
 	var ret = CheckDevice("/dev/sdx")
 	assert.Equal(t, true, ret, "The return of CheckDevice is not true.")
 
-	ret = CheckDevice("/dev/invalid/path")
-	assert.Equal(t, false, ret)
+}
 
+func TestCheckDeviceNotFound(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	var ret = CheckDevice("/dev/invalid/path")
+	assert.Equal(t, false, ret)
 }
 
 func TestResizeMpath(t *testing.T) {

@@ -1,5 +1,11 @@
 # Goock
 
+[![CircleCI](https://img.shields.io/circleci/project/github/peter-wangxu/goock/master.svg?style=plastic)]()
+
+[![Codecov](https://img.shields.io/codecov/c/github/peter-wangxu/goock/master.svg?style=plastic)]()
+
+-----
+
 Goock is a go library for discovering and managing block device.
 
 ## Introduction
@@ -17,7 +23,9 @@ management. This project is inspired by OpenStack project
 
 ## Installation
 
-TODO
+```
+go get github.com/peter-wangxu/goock
+```
 
 ## Requirements
 
@@ -26,7 +34,11 @@ TODO
 
 ## Testing
 
-TODO
+
+```
+cd goock
+go test -v ./...
+```
 
 ## Contributions
 

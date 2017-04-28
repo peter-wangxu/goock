@@ -69,6 +69,7 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 	// need to replace it _
 	fileName = strings.Replace(fileName, "/", "_", -1)
 	fileName = strings.Replace(fileName, "\\", "_", -1)
+	fileName = strings.Replace(fileName, ":", "_", -1)
 	fileName = fmt.Sprintf("%s%s.txt", getMockDir(), fileName)
 
 	// open a file
@@ -98,7 +99,7 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 		if cmdStatus == "0" {
 			return []byte(buffer.String()), nil
 		} else {
-			cmdError := errors.New("Status code is "+ cmdStatus)
+			cmdError := errors.New("Status code is " + cmdStatus)
 			return []byte(buffer.String()), cmdError
 		}
 
@@ -106,7 +107,6 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 		fmt.Printf("Unable to read mock data from file %s, default to empty string.\n", fileName)
 		return []byte(""), nil
 	}
-
 
 }
 

@@ -4,3 +4,10 @@ machine:
      GOROOT: ""
      PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
      GOPATH: "${HOME}/.go_project"
+
+test:
+    override:
+      - go test -v -race ./...
+      - bash gen_cover.sh
+    post:
+      - bash <(curl -s https://codecov.io/bash)
