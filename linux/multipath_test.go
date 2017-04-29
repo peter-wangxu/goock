@@ -1,9 +1,9 @@
 package linux
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"github.com/peter-wangxu/goock/test"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestIsMultipathEnabled(t *testing.T) {
@@ -17,19 +17,26 @@ func TestFlushPath(t *testing.T) {
 	err := FlushPath("36006016074e03a00ee762958673eaf1b")
 	assert.Nil(t, err)
 
-	err = FlushPath("")
-	assert.Nil(t, err)
 }
 
-func TestGetPaths(t *testing.T) {
-	SetExecutor(test.NewMockExecutor())
+func TestFlushPathAll(t *testing.T) {
 
+	SetExecutor(test.NewMockExecutor())
+	err := FlushPath("")
+	assert.Nil(t, err)
 }
 
 func TestReconfigure(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	success := Reconfigure()
-	assert.True(t, success)
+	assert.Nil(t, success)
+}
+
+func TestReconfigureError(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	// TODO need to support specifying test data
+	//err := Reconfigure()
+	//assert.Error(t, err, "failed to reconfigure.")
 }
 
 func TestReload(t *testing.T) {
@@ -53,5 +60,14 @@ func TestCheckDeviceNotFound(t *testing.T) {
 }
 
 func TestResizeMpath(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	var ret = ResizeMpath("36006016074e03a003dbe2a580510610b")
+	assert.Nil(t, ret)
+}
 
+func TestFindMpathByPath(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	FindMpathByPath("/dev/disk/by-path/ip-192.168.3.50:3260-iscsi-iqn.1992-04.com.emc:cx.apm00152904558.b12-lun-11")
+	//TODO how to mock "path, err := filepath.EvalSymlinks(path)"
+	//assert.NotEmpty(t, ret)
 }

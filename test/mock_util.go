@@ -1,16 +1,17 @@
 package test
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
 	"github.com/peter-wangxu/goock/exec"
 	"github.com/stretchr/testify/mock"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"strings"
-	"bufio"
-	"log"
-	"bytes"
-	"errors"
 )
 
 type MockExecutor struct {
@@ -35,6 +36,7 @@ type MockCmd struct {
 	Args []string
 	Env  []string
 	// Add more properties if mock needed
+	Stdin []string
 }
 
 func (m *MockCmd) SetDir(dir string) {
@@ -42,7 +44,11 @@ func (m *MockCmd) SetDir(dir string) {
 }
 
 func (m *MockCmd) SetStdin(in io.Reader) {
-
+	var msg string
+	if b, err := ioutil.ReadAll(in); err == nil {
+		msg = string(b)
+	}
+	m.Stdin = strings.Split(msg, " ")
 }
 
 func (m *MockCmd) SetStdout(out io.Writer) {
@@ -64,6 +70,8 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 	var cmds []string
 	cmds = append(cmds, m.Path)
 	cmds = append(cmds, m.Args...)
+	// Append the Stdin as Args
+	cmds = append(cmds, m.Stdin...)
 	fileName := strings.Join(cmds, "_")
 	// some commands contain "/" or "\" which may interfere the mock file
 	// need to replace it _
@@ -114,7 +122,7 @@ func getMockDir() string {
 	goPath := os.Getenv("GOPATH")
 	goPath = strings.Split(goPath, string(os.PathListSeparator))[0]
 	var goProject string
-	if (goPath == "") {
+	if goPath == "" {
 		goProject, _ = os.Getwd()
 	} else {
 		goProject = fmt.Sprintf("%s/src/github.com/peter-wangxu/goock", goPath)

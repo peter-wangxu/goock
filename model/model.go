@@ -1,10 +1,10 @@
 package model
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/peter-wangxu/goock/exec"
 	"reflect"
 	"regexp"
-	"github.com/Sirupsen/logrus"
 	"strconv"
 )
 
@@ -53,7 +53,6 @@ func (p *LineParser) Parse(output string, pat interface{}) []map[string]string {
 
 }
 
-
 // Returns true if a valid item parsed
 func (p *LineParser) filter(item map[string]string) bool {
 	return true
@@ -61,9 +60,9 @@ func (p *LineParser) filter(item map[string]string) bool {
 
 func (p *LineParser) Split(output string) []string {
 	var lines []string
-	if (p.Delimiter != "") {
+	if p.Delimiter != "" {
 		lines = RegSplit(output, p.Delimiter)
-	} else if (p.Matcher != "") {
+	} else if p.Matcher != "" {
 		lines = RegMatcher(output, p.Matcher)
 	}
 	return lines
@@ -110,14 +109,13 @@ func (f *PairParser) filter(item map[string]string) bool {
 
 func (f *PairParser) Split(output string) []string {
 	var lines []string
-	if (f.Delimiter != "") {
+	if f.Delimiter != "" {
 		lines = RegSplit(output, f.Delimiter)
-	} else if (f.Matcher != "") {
+	} else if f.Matcher != "" {
 		lines = RegMatcher(output, f.Matcher)
 	}
 	return lines
 }
-
 
 // Model declaration
 type Model interface {
@@ -146,7 +144,7 @@ func (iscsi *ISCSISession) GetPattern() interface{} {
 }
 
 func (iscsi *ISCSISession) GetCommand() []string {
-	if (len(iscsi.params) == 0) {
+	if len(iscsi.params) == 0 {
 
 		return []string{"iscsiadm", "-m", "session"}
 	} else {
@@ -187,7 +185,7 @@ func (iscsi *ISCSISession) getOutput() string {
 	return string(out[:])
 }
 func NewISCSISession() []ISCSISession {
-	return (&ISCSISession{parser: &LineParser{Delimiter:"\\n+"}}).Parse()
+	return (&ISCSISession{parser: &LineParser{Delimiter: "\\n+"}}).Parse()
 }
 
 // Discover all the targets provided by targetPortals
@@ -201,7 +199,7 @@ func DiscoverISCSISession(targetPortals []string) []ISCSISession {
 			"-m", "discovery", "-t", "sendtargets", "-I", "default", "-p", portal,
 		}
 		go func() {
-			session := ISCSISession{parser:&LineParser{Delimiter:"\\n+"}}
+			session := ISCSISession{parser: &LineParser{Delimiter: "\\n+"}}
 			session.params = discovery
 			ret := session.Parse()
 			// Aggregate the results
@@ -211,7 +209,7 @@ func DiscoverISCSISession(targetPortals []string) []ISCSISession {
 	}
 	// Wait for all discovery
 	for i := 0; i < len(targetPortals); i++ {
-		each := <- c
+		each := <-c
 		results = append(results, each...)
 		logrus.Debug("Discover result found for target: ", each)
 	}
@@ -286,15 +284,15 @@ func (s *HBA) getOutput() string {
 }
 
 func NewHBA() []HBA {
-	return (&HBA{parser: &PairParser{Delimiter:"\\n{3,}"}}).Parse()
+	return (&HBA{parser: &PairParser{Delimiter: "\\n{3,}"}}).Parse()
 }
 
 // (Multipath) Subclass of Model
 // Each Multipath contains one or more SinglePath
 type Multipath struct {
-	dataMap         map[string]string
-	parser          Parser
-	params          []string
+	dataMap map[string]string
+	parser  Parser
+	params  []string
 	// reload or reject
 	Action          string
 	Wwn             string
@@ -314,7 +312,7 @@ func (s *Multipath) GetPattern() interface{} {
 }
 
 func (s *Multipath) GetCommand() []string {
-	if (len(s.params) == 0) {
+	if len(s.params) == 0 {
 		return []string{"multipath", "-ll"}
 	} else {
 		return append([]string{"multipath"}, s.params...)
@@ -362,32 +360,33 @@ func (s *Multipath) SetParams(params []string) {
 }
 
 func NewMultipath() []Multipath {
-	return (&Multipath{parser: &LineParser{Matcher:"(\\w+:\\s+)?\\w{33}"}}).Parse()
+	return (&Multipath{parser: &LineParser{Matcher: "(\\w+:\\s+)?\\w{33}"}}).Parse()
 }
 
 func FindMultipath(path string) []Multipath {
-	m := &Multipath{parser: &LineParser{Matcher:"(\\w+:\\s+)?\\w{33}"}}
+	m := &Multipath{parser: &LineParser{Matcher: "(\\w+:\\s+)?\\w{33}"}}
 	m.SetParams([]string{"-l", path})
 	return m.Parse()
 }
+
 // (SinglePath) Subclass of Model
 type SinglePath struct {
-	dataMap      map[string]string
-	parser       Parser
-	output       string
+	dataMap map[string]string
+	parser  Parser
+	output  string
 	//Policy string
 	//Priority string
-	Host         int
-	Channel      int
-	Id           int
-	Lun          int
-	DevNode      string
-	Major        int
-	Minor        int
+	Host    int
+	Channel int
+	Id      int
+	Lun     int
+	DevNode string
+	Major   int
+	Minor   int
 	// possible value: failed, active
-	DmStatus     string
+	DmStatus string
 	// possible value: ready, ghost, faulty, shaky
-	PathStatus   string
+	PathStatus string
 	// possible value: running, offline
 	OnlineStatus string
 }
@@ -437,7 +436,7 @@ func (single *SinglePath) Parse() []SinglePath {
 }
 
 func NewSinglePath(output string) []SinglePath {
-	rS := &SinglePath{parser: &LineParser{Delimiter:"\\n+"}}
+	rS := &SinglePath{parser: &LineParser{Delimiter: "\\n+"}}
 	rS.SetOutput(output)
 	return rS.Parse()
 }
@@ -445,11 +444,11 @@ func NewSinglePath(output string) []SinglePath {
 // DeviceInfo: subclass of Model
 
 type DeviceInfo struct {
-	dataMap    map[string]string
-	parser     Parser
-	params     []string
-	Device     string
-	Host       string
+	dataMap map[string]string
+	parser  Parser
+	params  []string
+	Device  string
+	Host    string
 	// numbered host
 	HostNumber int
 	Channel    int
@@ -462,7 +461,7 @@ func (d *DeviceInfo) GetPattern() interface{} {
 }
 
 func (d *DeviceInfo) GetCommand() []string {
-	if (len(d.params) <= 0) {
+	if len(d.params) <= 0 {
 		return []string{"sg_scan"}
 	} else {
 		return append([]string{"sg_scan"}, d.params...)
@@ -506,15 +505,16 @@ func (d *DeviceInfo) Parse() []DeviceInfo {
 }
 
 func NewDeviceInfo(path string) []DeviceInfo {
-	rS := &DeviceInfo{parser: &LineParser{Delimiter:"\\n+"}, params:[]string{path}}
+	rS := &DeviceInfo{parser: &LineParser{Delimiter: "\\n+"}, params: []string{path}}
 	return rS.Parse()
 }
+
 // Split by regexp specified by delimiter
 func RegSplit(text string, delimiter string) []string {
 	reg := regexp.MustCompile(delimiter)
 	indexes := reg.FindAllStringIndex(text, -1)
 	lastStart := 0
-	result := make([]string, len(indexes) + 1)
+	result := make([]string, len(indexes)+1)
 	for i, element := range indexes {
 		result[i] = text[lastStart:element[0]]
 		lastStart = element[1]
@@ -530,33 +530,33 @@ func RegMatcher(text string, matcher string) []string {
 	matchedIndex := reg.FindAllStringSubmatchIndex(text, -1)
 	var result []string
 	//matchedCount := len(matchedIndex)
-	if (matchedIndex == nil) {
+	if matchedIndex == nil {
 		return []string{}
 	}
-	if (len(matchedIndex) == 1) {
+	if len(matchedIndex) == 1 {
 		return []string{text}
 	}
 
-	for j := 0; j < len(matchedIndex) - 1; j++ {
-		m := text[matchedIndex[j][0]:matchedIndex[j + 1][0]]
+	for j := 0; j < len(matchedIndex)-1; j++ {
+		m := text[matchedIndex[j][0]:matchedIndex[j+1][0]]
 		result = append(result, m)
 	}
-	result = append(result, text[len(matchedIndex) - 1:])
+	result = append(result, text[len(matchedIndex)-1:])
 	return result
 }
 
 func SetValue(field reflect.Value, value interface{}) {
-	if (field.CanSet()) {
+	if field.CanSet() {
 		switch field.Kind() {
 		case reflect.Int:
 			i, err := strconv.ParseInt(value.(string), 10, 64)
-			if (err != nil) {
+			if err != nil {
 				i = 0
 			}
 			field.SetInt(i)
 		case reflect.Float64:
 			f, err := strconv.ParseFloat(value.(string), 2)
-			if (err != nil) {
+			if err != nil {
 				f = 0.0
 			}
 			field.SetFloat(f)
@@ -565,7 +565,7 @@ func SetValue(field reflect.Value, value interface{}) {
 
 		case reflect.Bool:
 			b, err := strconv.ParseBool(value.(string))
-			if (err != nil) {
+			if err != nil {
 				b = false
 			}
 			field.SetBool(b)
@@ -577,4 +577,3 @@ func SetValue(field reflect.Value, value interface{}) {
 		logrus.Debugf("Invalid value [%v] specified for property [%s]", value, field.String())
 	}
 }
-

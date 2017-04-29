@@ -47,11 +47,13 @@ func TestNewMultipath(t *testing.T) {
 	assert.Equal(t, "1 alua", m.HWHandler)
 	assert.Equal(t, "rw", m.WritePermission)
 	assert.Equal(t, 3, len(m.Paths))
+	for _, path := range m.Paths {
+		assert.Regexp(t, "^\\w+$", path.DevNode)
+	}
 	// check action
 	m1 := multipaths[4]
 	assert.Equal(t, "reload", m1.Action)
 }
-
 
 func TestDiscoverISCSISession(t *testing.T) {
 

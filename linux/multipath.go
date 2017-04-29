@@ -3,13 +3,14 @@ package linux
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	goockutil "github.com/peter-wangxu/goock/util"
 	"github.com/peter-wangxu/goock/model"
+	goockutil "github.com/peter-wangxu/goock/util"
+	"path/filepath"
 )
 
 func IsMultipathEnabled() bool {
 	_, err := executor.Command("multipathd", "show", "status").CombinedOutput()
-	if (err != nil) {
+	if err != nil {
 		return false
 	}
 	return true
@@ -26,15 +27,13 @@ func FlushPath(path string) error {
 	return err
 }
 
-
 // Reconfigure multipath
-func Reconfigure() bool {
+func Reconfigure() error {
 	output, err := executor.Command("multipathd", "reconfigure").CombinedOutput()
 	if nil != err {
 		logrus.WithError(err).Info(fmt.Sprintf("Failed to reconfigure the multipathd. %s", output))
-		return false
 	}
-	return true
+	return err
 }
 
 // Force multipath reloads devices via multipath -r
@@ -81,27 +80,37 @@ func FindMpathByWwn(wwn string) string {
 	// Wait for its appearance under /dev/disk/by-id/dm-uuid-mpath
 	potential1 := fmt.Sprintf("/dev/disk/by-id/dm-uuid-mpath-%s", wwn)
 	existed := goockutil.WaitForPath(potential1, 10)
-	if (existed) {
+	if existed {
 		return potential1
 	}
 	// Wait for its appearance under /dev/mapper/
 	potential2 := fmt.Sprintf("/dev/mapper/%s", wwn)
 	existed = goockutil.WaitForPath(potential2, 10)
-	if (existed) {
+	if existed {
 		return potential2
 	}
 	return ""
 }
 
 // Use multipath -l <path> to discover multipath device
+// Valid <path> could be WWN or /dev/sdb like path
 func FindMpathByPath(path string) string {
+	path, err := filepath.EvalSymlinks(path)
+	logrus.WithError(err).Info("real path", path)
 	logrus.Info("Try to find multipath device by multipath -l : ", path)
-	m := model.FindMultipath(path)
-	models := m
+	models := model.FindMultipath(path)
 	mPath := ""
-	if (len(models) > 0) {
+	if len(models) > 0 {
 		wwn := models[0].Wwn
 		mPath = fmt.Sprintf("/dev/disk/by-id/dm-uuid-mpath-%s", wwn)
 	}
 	return mPath
+}
+
+func FindMultipathByWwn(wwn string) model.Multipath {
+	models := model.FindMultipath(wwn)
+	if len(models) >= 1 {
+		return models[0]
+	}
+	return model.Multipath{}
 }
