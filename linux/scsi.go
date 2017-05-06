@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/peter-wangxu/goock/exec"
+	"github.com/peter-wangxu/goock/model"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/peter-wangxu/goock/model"
 )
 
 var executor = exec.New()
@@ -19,7 +20,7 @@ func SetExecutor(e exec.Interface) {
 func GetWWN(path string) string {
 	output, _ := executor.Command("/lib/udev/scsi_id", "--page", "0x83",
 		"--whitelisted", path).CombinedOutput()
-	return strings.Trim(string(output), " ")
+	return strings.Trim(string(output), "\n")
 }
 
 // Check if path is already RW/RO
@@ -79,7 +80,7 @@ func ScanSCSIBus(path string, content string) error {
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader(content))
 	_, err := cmd.CombinedOutput()
-	if (err != nil) {
+	if err != nil {
 		logrus.WithError(err).Warn("Rescan Bus failed")
 
 	}
@@ -87,15 +88,18 @@ func ScanSCSIBus(path string, content string) error {
 
 }
 
+// path = "/dev/sdb" or "sdb"
 // Use echo 1 > /sys/block/%s/device/delete to force delete the device
 func RemoveSCSIDevice(path string) {
-	if !strings.Contains(path, "/") {
-		path = fmt.Sprintf("/sys/block/%s/device/delete", path)
+	if strings.Contains(path, string(filepath.Separator)) {
+		// Get the file name from the full path, ex : /dev/sdb -> sdb
+		_, path = filepath.Split(path)
 	}
-
+	path = fmt.Sprintf("/sys/block/%s/device/delete", path)
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader("1"))
-	cmd.CombinedOutput()
+	out, _ := cmd.CombinedOutput()
+	logrus.Debugf("Remove device [%s] with output : [%s]", path, out)
 }
 
 //TODO Add echo_scsi_command for use
@@ -103,12 +107,13 @@ func ExtendDevice(path string) error {
 
 	return nil
 }
+
 // output:
 // sudo sg_scan /dev/disk/by-path/pci-0000:05:00.1-fc-0x5006016d09200925-lun-0
 // /dev/disk/by-path/pci-0000:05:00.1-fc-0x5006016d09200925-lun-0: scsi9 channel=0 id=0 lun=0 [em]
 func GetDeviceInfo(path string) model.DeviceInfo {
 	devices := model.NewDeviceInfo(path)
-	if (len(devices) <= 0) {
+	if len(devices) <= 0 {
 		logrus.Warn("Unable to get device info for device ", path)
 		return model.DeviceInfo{}
 	}
@@ -120,4 +125,3 @@ func GetDeviceInfo(path string) model.DeviceInfo {
 func RescanDevice(path string) {
 
 }
-

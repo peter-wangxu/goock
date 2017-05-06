@@ -1,0 +1,14 @@
+0
+NAME                                RO
+sdb                                  0
+└─36006016003b03a00da41ad58e6ab1cc0  0
+sdd                                  0
+└─36006016015e03a00bea7c7588c91d581  0
+sde                                  0
+sdf                                  0
+└─36006016003b03a00da41ad58e6ab1cc0  0
+sdg                                  0
+└─36006016015e03a00bea7c7588c91d581  1
+sr0                                  0
+vda                                  0
+└─vda1                               0

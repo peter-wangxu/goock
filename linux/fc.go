@@ -3,8 +3,8 @@ package linux
 import (
 	"fmt"
 	"github.com/peter-wangxu/goock/model"
-	"strings"
 	"github.com/peter-wangxu/goock/util"
+	"strings"
 )
 
 func IsFCSupport() bool {
