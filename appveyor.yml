@@ -12,7 +12,8 @@ install:
   - echo %GOPATH%
   - go version
   - go env
-  - go get -v -t ./...
+  - go get -d -v -t ./...
+  - go build -v
 
 build_script:
   - go test -v -race ./...

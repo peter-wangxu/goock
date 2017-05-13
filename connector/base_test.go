@@ -13,16 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package helper
+
+package connector
 
 import (
-	"runtime"
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
-func SkipIfWindows(t *testing.T) {
-	osName := runtime.GOOS
-	if osName == "windows" {
-		t.Skip("Test case is skipped, as it's for non-windows platform.")
-	}
+func TestConnectionProperty_IsEmpty(t *testing.T) {
+	prop := ConnectionProperty{}
+	assert.Error(t, prop.IsEmpty())
+}
+
+func TestConnectionProperty_IsEmptyFalse(t *testing.T) {
+	prop := ConnectionProperty{TargetPortals: []string{"192.168.1.2:3260"}, TargetLuns: []int{11}}
+	assert.Nil(t, prop.IsEmpty())
 }

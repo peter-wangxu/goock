@@ -1,0 +1,2 @@
+0
+lrwxrwxrwx 1 root root 10 Apr 25 22:14 /dev/disk/by-id/dm-uuid-mpath-350060160b6e00e5a50060160b6e00e5a -> ../../dm-8

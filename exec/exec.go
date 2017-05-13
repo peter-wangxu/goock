@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The goock Authors.
+Copyright 2017 The Goock Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,10 +17,19 @@ limitations under the License.
 package exec
 
 import (
+	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	osexec "os/exec"
 	"syscall"
+	"time"
 )
+
+var log *logrus.Logger = logrus.New()
+
+func SetLogger(l *logrus.Logger) {
+	log = l
+}
 
 // ErrExecutableNotFound is returned if the executable is not found.
 var ErrExecutableNotFound = osexec.ErrNotFound
@@ -95,10 +104,15 @@ func (cmd *cmdWrapper) SetStdout(out io.Writer) {
 
 // CombinedOutput is part of the Cmd interface.
 func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
+	start := time.Now()
 	out, err := (*osexec.Cmd)(cmd).CombinedOutput()
+	end := time.Since(start)
 	if err != nil {
+		log.Debug(fmt.Sprintf("[Command] %s returned [%s] within %s", cmd.Args, out, end))
+
 		return out, handleError(err)
 	}
+
 	return out, nil
 }
 

@@ -1,0 +1,3 @@
+0
+Logging in to [iface: default, target: iqn.1992-04.com.emc_cx.fcnch097ae1234.h2, portal: 192.168.1.2,3260] (multiple)
+Login to [iface: default, target: iqn.1992-04.com.emc_cx.fcnch097ae1234.h2, portal: 192.168.1.2,3260] successful.
