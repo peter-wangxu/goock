@@ -1,21 +1,28 @@
+/*
+Copyright 2017 The Goock Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package linux
 
 import (
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/peter-wangxu/goock/exec"
 	"github.com/peter-wangxu/goock/model"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-var executor = exec.New()
-
-func SetExecutor(e exec.Interface) {
-	executor = e
-}
 
 func GetWWN(path string) string {
 	output, _ := executor.Command("/lib/udev/scsi_id", "--page", "0x83",
@@ -61,7 +68,7 @@ func CheckReadWrite(path string, wwn string) bool {
 func GetDeviceSize(path string) int {
 	output, err := executor.Command("blockdev", "--getsize64", path).CombinedOutput()
 	if nil != err {
-		logrus.WithError(err).Warn("Unable to get size of device %s", path)
+		log.WithError(err).Warn("Unable to get size of device %s", path)
 	}
 	trimmed := strings.Trim(string(output), " ")
 	if trimmed == "" {
@@ -81,7 +88,7 @@ func ScanSCSIBus(path string, content string) error {
 	cmd.SetStdin(strings.NewReader(content))
 	_, err := cmd.CombinedOutput()
 	if err != nil {
-		logrus.WithError(err).Warn("Rescan Bus failed")
+		log.WithError(err).Warn("Rescan Bus failed")
 
 	}
 	return err
@@ -99,7 +106,7 @@ func RemoveSCSIDevice(path string) {
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader("1"))
 	out, _ := cmd.CombinedOutput()
-	logrus.Debugf("Remove device [%s] with output : [%s]", path, out)
+	log.Debugf("Remove device [%s] with output : [%s]", path, out)
 }
 
 //TODO Add echo_scsi_command for use
@@ -114,7 +121,7 @@ func ExtendDevice(path string) error {
 func GetDeviceInfo(path string) model.DeviceInfo {
 	devices := model.NewDeviceInfo(path)
 	if len(devices) <= 0 {
-		logrus.Warn("Unable to get device info for device ", path)
+		log.Warn("Unable to get device info for device ", path)
 		return model.DeviceInfo{}
 	}
 	return devices[0]

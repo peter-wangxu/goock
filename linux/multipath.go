@@ -1,8 +1,22 @@
+/*
+Copyright 2017 The Goock Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package linux
 
 import (
 	"fmt"
-	"github.com/Sirupsen/logrus"
 	"github.com/peter-wangxu/goock/model"
 	goockutil "github.com/peter-wangxu/goock/util"
 	"path/filepath"
@@ -31,7 +45,7 @@ func FlushPath(path string) error {
 func Reconfigure() error {
 	output, err := executor.Command("multipathd", "reconfigure").CombinedOutput()
 	if nil != err {
-		logrus.WithError(err).Info(fmt.Sprintf("Failed to reconfigure the multipathd. %s", output))
+		log.WithError(err).Info(fmt.Sprintf("Failed to reconfigure the multipathd. %s", output))
 	}
 	return err
 }
@@ -40,7 +54,7 @@ func Reconfigure() error {
 func Reload() error {
 	output, err := executor.Command("multipath", "-r").Output()
 	if nil != err {
-		logrus.WithError(err).Debug(fmt.Sprintf("Reload multipath failed: %s", output))
+		log.WithError(err).Debug(fmt.Sprintf("Reload multipath failed: %s", output))
 	}
 	return err
 }
@@ -49,7 +63,7 @@ func Reload() error {
 func CheckDevice(path string) bool {
 	output, err := executor.Command("multipath", "-c", path).CombinedOutput()
 	if nil != err {
-		logrus.WithError(err).Debug(fmt.Sprintf("The specified path doesn't exist: %s", output))
+		log.WithError(err).Debug(fmt.Sprintf("The specified path doesn't exist: %s", output))
 		return false
 	}
 	return true
@@ -58,7 +72,7 @@ func CheckDevice(path string) bool {
 func ResizeMpath(mpathId string) error {
 	output, err := executor.Command("multipathd", "resize", "map", mpathId).CombinedOutput()
 	if nil != err {
-		logrus.WithError(err).Debug(fmt.Sprintf("Resize %s failed due to [%s]", mpathId, output))
+		log.WithError(err).Debug(fmt.Sprintf("Resize %s failed due to [%s]", mpathId, output))
 	}
 	return err
 }
@@ -76,7 +90,7 @@ func ResizeMpath(mpathId string) error {
 // /dev/disk/by-id/scsi-<WWN>
 // /dev/mapper/<WWN>
 func FindMpathByWwn(wwn string) string {
-	logrus.Info("Try to find multipath device for WWN: ", wwn)
+	log.Info("Try to find multipath device for WWN: ", wwn)
 	// Wait for its appearance under /dev/disk/by-id/dm-uuid-mpath
 	potential1 := fmt.Sprintf("/dev/disk/by-id/dm-uuid-mpath-%s", wwn)
 	existed := goockutil.WaitForPath(potential1, 10)
@@ -96,8 +110,8 @@ func FindMpathByWwn(wwn string) string {
 // Valid <path> could be WWN or /dev/sdb like path
 func FindMpathByPath(path string) string {
 	path, err := filepath.EvalSymlinks(path)
-	logrus.WithError(err).Info("real path", path)
-	logrus.Info("Try to find multipath device by multipath -l : ", path)
+	log.WithError(err).Info("real path", path)
+	log.Info("Try to find multipath device by multipath -l : ", path)
 	models := model.FindMultipath(path)
 	mPath := ""
 	if len(models) > 0 {

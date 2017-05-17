@@ -1,0 +1,2 @@
+0
+lrwxrwxrwx 1 root root 9 May 12 04:13 /dev/disk/by-path/ip-192.168.3.49:3260-iscsi-iscsi-iqn.1992-04.com.emc_cx.apm00152904558.a12-lun-4 -> ../../sdj

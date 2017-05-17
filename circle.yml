@@ -7,7 +7,9 @@ machine:
 
 test:
     override:
+      - go env
       - go test -v -race ./...
       - bash gen_cover.sh
+      - go build -v
     post:
       - bash <(curl -s https://codecov.io/bash)

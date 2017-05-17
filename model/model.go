@@ -1,12 +1,33 @@
+/*
+Copyright 2017 The Goock Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package model
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/peter-wangxu/goock/exec"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"regexp"
 	"strconv"
 )
+
+var log *logrus.Logger = logrus.New()
+
+func SetLogger(l *logrus.Logger) {
+	log = l
+}
 
 var executor = exec.New()
 
@@ -21,7 +42,7 @@ type Parser interface {
 }
 
 // LineParse parse each line as a single data map
-// The data map could be used to initialize a new Object derived from Model
+// The data map could be used to initialize a new Object derived from Interface
 type LineParser struct {
 	Delimiter string
 	Matcher   string
@@ -117,8 +138,8 @@ func (f *PairParser) Split(output string) []string {
 	return lines
 }
 
-// Model declaration
-type Model interface {
+// Interface declaration
+type Interface interface {
 	GetPattern() interface{}
 	GetCommand() []string
 	getOutput() string
@@ -140,7 +161,7 @@ type ISCSISession struct {
 }
 
 func (iscsi *ISCSISession) GetPattern() interface{} {
-	return "\\s*(?P<TargetPortal>\\S+),(?P<Tag>\\d+)\\s+(?P<TargetIqn>\\S+)"
+	return "\\s*(?P<TargetPortal>\\S+:\\d*),(?P<Tag>\\d+)\\s+(?P<TargetIqn>\\S+)"
 }
 
 func (iscsi *ISCSISession) GetCommand() []string {
@@ -211,14 +232,14 @@ func DiscoverISCSISession(targetPortals []string) []ISCSISession {
 	for i := 0; i < len(targetPortals); i++ {
 		each := <-c
 		results = append(results, each...)
-		logrus.Debug("Discover result found for target: ", each)
+		log.Debug("Discover result found for target: ", each)
 	}
 	return results
 }
 
 // end of implementation of ISCSISession
 
-// (HBA) Subclass of Model
+// (HBA) Subclass of Interface
 type HBA struct {
 	dataMap         map[string]string
 	parser          Parser
@@ -287,7 +308,7 @@ func NewHBA() []HBA {
 	return (&HBA{parser: &PairParser{Delimiter: "\\n{3,}"}}).Parse()
 }
 
-// (Multipath) Subclass of Model
+// (Multipath) Subclass of Interface
 // Each Multipath contains one or more SinglePath
 type Multipath struct {
 	dataMap map[string]string
@@ -369,7 +390,7 @@ func FindMultipath(path string) []Multipath {
 	return m.Parse()
 }
 
-// (SinglePath) Subclass of Model
+// (SinglePath) Subclass of Interface
 type SinglePath struct {
 	dataMap map[string]string
 	parser  Parser
@@ -441,7 +462,7 @@ func NewSinglePath(output string) []SinglePath {
 	return rS.Parse()
 }
 
-// DeviceInfo: subclass of Model
+// DeviceInfo: subclass of Interface
 
 type DeviceInfo struct {
 	dataMap map[string]string
@@ -472,7 +493,7 @@ func (d *DeviceInfo) getOutput() string {
 	cmd := d.GetCommand()
 	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
 	if nil != err {
-		logrus.Debug("Failed to get device info: ", out)
+		log.Debug("Failed to get device info: ", out)
 	}
 	return string(out[:])
 }
@@ -570,10 +591,10 @@ func SetValue(field reflect.Value, value interface{}) {
 			}
 			field.SetBool(b)
 		default:
-			logrus.Debug("Unsupported data type ", value, "for field ", field.String())
+			log.Debug("Unsupported data type ", value, "for field ", field.String())
 		}
 	} else {
 
-		logrus.Debugf("Invalid value [%v] specified for property [%s]", value, field.String())
+		log.Debugf("Invalid value [%v] specified for property [%s]", value, field.String())
 	}
 }
