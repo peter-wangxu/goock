@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var log *logrus.Logger = logrus.New()
@@ -229,10 +230,18 @@ func DiscoverISCSISession(targetPortals []string) []ISCSISession {
 
 	}
 	// Wait for all discovery
+	var discoveredTargets []string
 	for i := 0; i < len(targetPortals); i++ {
 		each := <-c
 		results = append(results, each...)
-		log.Debug("Discover result found for target: ", each)
+		for _, d := range each {
+			discoveredTargets = append(discoveredTargets, d.TargetPortal)
+		}
+		log.WithFields(
+			logrus.Fields{
+				"Target":     targetPortals,
+				"Discovered": strings.Join(discoveredTargets, ", ")}).Debug(
+			"Discover result")
 	}
 	return results
 }

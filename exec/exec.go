@@ -69,6 +69,11 @@ type ExitError interface {
 	ExitStatus() int
 }
 
+// The hard-coded exit code, follow the rule: http://tldp.org/LDP/abs/html/exitcodes.html
+
+var FileNotFound = 127
+var Unknown = 255
+
 // Implements Interface in terms of really exec()ing.
 type executor struct{}
 
@@ -107,35 +112,39 @@ func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
 	start := time.Now()
 	out, err := (*osexec.Cmd)(cmd).CombinedOutput()
 	end := time.Since(start)
+	var exitCode = 0
 	if err != nil {
-		log.Debug(fmt.Sprintf("[Command] %s returned [%s] within %s", cmd.Args, out, end))
-
-		return out, handleError(err)
+		err, exitCode = handleError(err)
 	}
-
-	return out, nil
+	log.WithFields(logrus.Fields{
+		"cmd":       cmd.Args,
+		"output":    string(out),
+		"exit_code": exitCode,
+		"duration":  fmt.Sprintf("%.4fs", end.Seconds()),
+	}).Debug("Command line result")
+	return out, err
 }
 
 func (cmd *cmdWrapper) Output() ([]byte, error) {
 	out, err := (*osexec.Cmd)(cmd).Output()
 	if err != nil {
-		return out, handleError(err)
+		err, _ = handleError(err)
 	}
-	return out, nil
+	return out, err
 }
 
-func handleError(err error) error {
+func handleError(err error) (error, int) {
 	if ee, ok := err.(*osexec.ExitError); ok {
-		// Force a compile fail if exitErrorWrapper can't convert to ExitError.
+		// Force a compile fail if ExitErrorWrapper can't convert to ExitError.
 		var x ExitError = &ExitErrorWrapper{ee}
-		return x
+		return x, x.ExitStatus()
 	}
 	if ee, ok := err.(*osexec.Error); ok {
 		if ee.Err == osexec.ErrNotFound {
-			return ErrExecutableNotFound
+			return ErrExecutableNotFound, FileNotFound
 		}
 	}
-	return err
+	return err, Unknown
 }
 
 // ExitErrorWrapper is an implementation of ExitError in terms of os/exec ExitError.

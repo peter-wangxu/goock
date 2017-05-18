@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/peter-wangxu/goock/connector"
 	"github.com/peter-wangxu/goock/model"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -55,10 +54,10 @@ func HandleISCSIDisconnect(args ...string) error {
 func HandleISCSIConnect(args ...string) error {
 	var err error
 	if len(args) <= 0 {
-		fmt.Fprint(os.Stderr, "Target IP is required.")
+		log.Error("Target IP is required.")
 		err = fmt.Errorf("Target IP is required.")
 	} else if len(args) == 1 {
-		log.Debugf("LUN ID is not specified, will query all LUNs on target IP: %s", args[0])
+		log.Info("LUN ID is not specified, will query all LUNs on target IP: %s", args[0])
 		targetIP := args[0]
 		// TODO Need to login and find all possible LUN IDs
 		volumeInfo, conErr := FetchVolumeInfo(targetIP, 4)

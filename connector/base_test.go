@@ -17,8 +17,8 @@ limitations under the License.
 package connector
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestConnectionProperty_IsEmpty(t *testing.T) {
