@@ -126,8 +126,7 @@ func (iscsi *ISCSIConnector) LoginPortal(targetPortal string, targetIqn string) 
 		}
 	}
 	if loggedIn != true {
-		output, errLogin := iscsi.exec.Command("iscsiadm", "-m", "node", "-T", targetIqn, "-p", targetPortal, "--login").CombinedOutput()
-		log.Debug("Login target with output: ", output)
+		_, errLogin := iscsi.exec.Command("iscsiadm", "-m", "node", "-T", targetIqn, "-p", targetPortal, "--login").CombinedOutput()
 		err = errLogin
 	}
 	return err
@@ -183,6 +182,7 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 		discovered := iscsi.DiscoverPortal(notLogged...)
 		// login to the session as needed
 		// TODO(peter) can be accelerated by goroutine?
+		// but the os-brick says paralell login can crash open-iscsi
 		for _, newSession := range discovered {
 			iscsi.LoginPortal(newSession.TargetPortal, newSession.TargetIqn)
 		}
@@ -202,10 +202,11 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 		log.Info("Multipath discovery for iSCSI enabled.")
 		mPath := linux.FindMpathByWwn(wwn)
 		info.Wwn = wwn
+		info.MultipathId = wwn
 		info.Multipath = mPath
-		info.Paths = possiblePaths
+		info.Paths, _ = goockutil.FilterPath(possiblePaths)
 		if connectionProperty.AccessMode == READWRITE {
-			log.Debugf("Checing to see if multipath %s is writable.", mPath)
+			log.Debugf("Checking to see if multipath %s is writable.", mPath)
 			linux.CheckReadWrite(accessiblePath, wwn)
 		}
 	} else {
