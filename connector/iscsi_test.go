@@ -27,7 +27,7 @@ import (
 
 func TestISCSIConnector_GetHostInfo(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
-	iscsi := New()
+	iscsi := NewISCSIConnector()
 	props, err := iscsi.GetHostInfo([]string{})
 	assert.Nil(t, err)
 	assert.Equal(t, "iqn.1993-08.org.debian:01:b974ee37fea", props.Initiator)
@@ -38,7 +38,7 @@ func TestISCSIConnector_GetHostInfo(t *testing.T) {
 func TestISCSIConnector_LoginISCSIPortalAlreadyLoggedin(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	model.SetExecutor(test.NewMockExecutor())
-	iscsi := New()
+	iscsi := NewISCSIConnector()
 	err := iscsi.LoginPortal("10.64.76.253:3260", "iqn.1992-04.com.emc:cx.fcnch097ae5ef3.h1")
 	assert.Nil(t, err)
 }
@@ -46,7 +46,7 @@ func TestISCSIConnector_LoginISCSIPortalAlreadyLoggedin(t *testing.T) {
 func TestISCSIConnector_LoginISCSIPortal(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	model.SetExecutor(test.NewMockExecutor())
-	iscsi := New()
+	iscsi := NewISCSIConnector()
 	err := iscsi.LoginPortal("192.168.1.2:3260", "iqn.1992-04.com.emc:cx.fcnch097ae1234.h2")
 	assert.Nil(t, err)
 }
@@ -54,7 +54,7 @@ func TestISCSIConnector_LoginISCSIPortal(t *testing.T) {
 func TestISCSIConnector_ConnectVolume_NoProp(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	goockutil.SetExecutor(test.NewMockExecutor())
-	iscsi := New()
+	iscsi := NewISCSIConnector()
 	fakeProperty := ConnectionProperty{}
 	_, err := iscsi.ConnectVolume(fakeProperty)
 	assert.EqualError(t, err, "No path found")
@@ -68,7 +68,7 @@ func TestISCSIConnector_ConnectVolume(t *testing.T) {
 func TestISCSIConnector_ConnectVolume_NotAll(t *testing.T) {
 	goockutil.SetExecutor(test.NewMockExecutor())
 	linux.SetExecutor(test.NewMockExecutor())
-	iscsi := New()
+	iscsi := NewISCSIConnector()
 	fakeProperty := ConnectionProperty{}
 	fakeProperty.TargetIqns = []string{
 		"iqn.1992-04.com.emc:cx.apm00152904558.b12",
@@ -99,7 +99,7 @@ func TestISCSIConnector_DisconnectVolume(t *testing.T) {
 	goockutil.SetExecutor(test.NewMockExecutor())
 	linux.SetExecutor(test.NewMockExecutor())
 	model.SetExecutor(test.NewMockExecutor())
-	iscsi := New()
+	iscsi := NewISCSIConnector()
 	fakeProperty := ConnectionProperty{}
 	fakeProperty.TargetIqns = []string{
 		"iqn.1992-04.com.emc:cx.apm00152904447.a17",

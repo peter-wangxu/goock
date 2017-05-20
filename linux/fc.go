@@ -67,3 +67,7 @@ func RescanHosts() {
 		ScanSCSIBus(path, "")
 	}
 }
+
+func IsFCDevice(device string) bool {
+	return false
+}

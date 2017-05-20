@@ -23,6 +23,7 @@ import (
 	"github.com/peter-wangxu/goock/util"
 	"github.com/sirupsen/logrus"
 	"os"
+	"fmt"
 )
 
 var log *logrus.Logger = logrus.New()
@@ -52,4 +53,23 @@ func InitLog(debug bool) error {
 	model.SetLogger(log)
 	util.SetLogger(log)
 	return nil
+}
+
+
+// Handle the Extend request based the device type
+func HandleExtend(args ...string) error {
+	var err error
+	if len(args) <= 0 {
+		err = fmt.Errorf("Need device name or Target IP with LUN ID.")
+	}
+	if len(args) == 1 {
+		// User only supplies the local device name
+
+	} else {
+		// User specify TargetIP with LUN ID
+	}
+	if err != nil {
+		return err
+	}
+	return HandleISCSIExtend(args...)
 }
