@@ -18,6 +18,12 @@ func TestNewAppDisconnect(t *testing.T) {
 	assert.IsType(t, &App{}, goockApp)
 }
 
+func TestNewAppExtend(t *testing.T) {
+	goockApp := NewApp()
+	goockApp.Run([]string{"goock", "extend"})
+	assert.IsType(t, &App{}, goockApp)
+}
+
 func TestNewAppInfo(t *testing.T) {
 	goockApp := NewApp()
 	goockApp.Run([]string{"goock", "info"})

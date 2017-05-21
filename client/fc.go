@@ -18,3 +18,7 @@ package client
 func HandleFCConnect(args ...string) error {
 	return nil
 }
+
+func HandleFCExtend(args ...string) error {
+	return nil
+}

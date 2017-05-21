@@ -1,7 +1,16 @@
 package client
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestHandleFCConnect(t *testing.T) {
-	HandleFCConnect()
+	err := HandleFCConnect()
+	assert.Nil(t, err)
+}
+
+func TestHandleFCExtend(t *testing.T) {
+	err := HandleFCExtend()
+	assert.Nil(t, err)
 }

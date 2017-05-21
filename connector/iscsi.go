@@ -42,7 +42,7 @@ type ISCSIConnector struct {
 	exec exec.Interface
 }
 
-func New() Interface {
+func NewISCSIConnector() ISCSIInterface {
 	return &ISCSIConnector{exec: executor}
 }
 
@@ -182,7 +182,7 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 		discovered := iscsi.DiscoverPortal(notLogged...)
 		// login to the session as needed
 		// TODO(peter) can be accelerated by goroutine?
-		// but the os-brick says paralell login can crash open-iscsi
+		// but the os-brick says parallel login can crash open-iscsi
 		for _, newSession := range discovered {
 			iscsi.LoginPortal(newSession.TargetPortal, newSession.TargetIqn)
 		}

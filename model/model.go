@@ -338,7 +338,7 @@ type Multipath struct {
 
 func (s *Multipath) GetPattern() interface{} {
 
-	return `((?P<Action>\w+):\s+)?(?P<Wwn>\w{33})\s+(?P<DmDeviceName>\w+-?\d*)\s+(?P<Vendor>\w+),(?P<Product>\w+)\r?\nsize=(?P<Size>[\d\.]+)G\s+features='(?P<Features>.*)'\s+hwhandler='(?P<HWHandler>.*)'\s+wp=(?P<WritePermission>\w+)(?P<Paths>.*)`
+	return `((?P<Action>\w+):\s+)?(?P<Wwn>\w{33,})\s+(?P<DmDeviceName>\w+-?\d*)\s+(?P<Vendor>\w+)?,(?P<Product>\w+)?\r?\nsize=(?P<Size>[\d\.]+)G\s+features='(?P<Features>.*)'\s+hwhandler='(?P<HWHandler>.*)'\s+wp=(?P<WritePermission>\w+)(?P<Paths>.*)`
 }
 
 func (s *Multipath) GetCommand() []string {
@@ -363,7 +363,7 @@ func (s *Multipath) Parse() []Multipath {
 	mOutput := s.getOutput()
 	dataList := parser.Parse(mOutput, s.GetPattern())
 	list := make([]Multipath, len(dataList))
-	pathGroups := RegMatcher(mOutput, "\\w{33}")
+	pathGroups := RegMatcher(mOutput, "\\w{33,}")
 	for i, each := range dataList {
 		s := &Multipath{}
 		for k, v := range each {
@@ -390,11 +390,11 @@ func (s *Multipath) SetParams(params []string) {
 }
 
 func NewMultipath() []Multipath {
-	return (&Multipath{parser: &LineParser{Matcher: "(\\w+:\\s+)?\\w{33}"}}).Parse()
+	return (&Multipath{parser: &LineParser{Matcher: "(\\w+:\\s+)?\\w{33,}"}}).Parse()
 }
 
 func FindMultipath(path string) []Multipath {
-	m := &Multipath{parser: &LineParser{Matcher: "(\\w+:\\s+)?\\w{33}"}}
+	m := &Multipath{parser: &LineParser{Matcher: "(\\w+:\\s+)?\\w{33,}"}}
 	m.SetParams([]string{"-l", path})
 	return m.Parse()
 }

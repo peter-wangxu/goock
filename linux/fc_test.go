@@ -51,3 +51,11 @@ func TestRescanHosts(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	RescanHosts()
 }
+
+func TestIsFCDeviceTrue(t *testing.T) {
+
+}
+
+func TestIsFCDeviceFalse(t *testing.T) {
+
+}

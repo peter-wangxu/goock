@@ -64,7 +64,17 @@ type VolumeInfo struct {
 	Multipath   string
 }
 
+// Defining these interfaces is mainly for unit testing
+// Any caller of ISCSIConnector can implement this interface for testing purpose
+
 type Interface interface {
+	GetHostInfo(args []string) (HostInfo, error)
+	ConnectVolume(connectionProperty ConnectionProperty) (VolumeInfo, error)
+	DisconnectVolume(connectionProperty ConnectionProperty) error
+	ExtendVolume(connectionProperty ConnectionProperty) error
+}
+
+type ISCSIInterface interface {
 	GetHostInfo(args []string) (HostInfo, error)
 	ConnectVolume(connectionProperty ConnectionProperty) (VolumeInfo, error)
 	DisconnectVolume(connectionProperty ConnectionProperty) error

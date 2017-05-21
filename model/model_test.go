@@ -70,6 +70,22 @@ func TestNewMultipath(t *testing.T) {
 	assert.Equal(t, "reload", m1.Action)
 }
 
+// Test that multipath still works when WWN is longer thant 33 chars.
+// Added for iscsitarget package
+func TestFindMultipath(t *testing.T) {
+	old := executor
+	executor = test.NewMockExecutor()
+	defer func() {
+		executor = old
+	}()
+	multipaths := FindMultipath("149455400000000003592265eae69d00a6e8560cd2833744e")
+	assert.Len(t, multipaths, 1)
+	m := multipaths[0]
+	assert.Equal(t, "149455400000000003592265eae69d00a6e8560cd2833744e", m.Wwn)
+	assert.Equal(t, "dm-3", m.DmDeviceName)
+	assert.Equal(t, 1.0, m.Size)
+}
+
 func TestDiscoverISCSISession(t *testing.T) {
 
 	old := executor

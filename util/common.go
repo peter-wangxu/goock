@@ -46,7 +46,7 @@ func WaitForPath(path string, maxWait int) bool {
 		}
 		time.Sleep(time.Second * time.Duration(WAIT_INTERVAL))
 	}
-	log.Debug("Path %s does not appear in %s seconds", path, maxWait*WAIT_INTERVAL)
+	log.Debugf("Path %s does not appear in %v seconds", path, maxWait*WAIT_INTERVAL)
 	return false
 }
 

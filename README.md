@@ -3,8 +3,8 @@
 [![CircleCI](https://img.shields.io/circleci/project/github/peter-wangxu/goock/master.svg?style=plastic)]()
 [![Codecov](https://img.shields.io/codecov/c/github/peter-wangxu/goock/master.svg?style=plastic)]()
 
-Goock is a GO library/client for discovering and managing block device. it dramatically eases the
-effort needed when connecting to storage backend.
+Goock is a `Go` library/client for discovering and managing block device. it dramatically eases the
+efforts needed when connecting/disconnecting to storage backend.
 
 ## Table of Content
 
@@ -15,11 +15,12 @@ effort needed when connecting to storage backend.
 * [Usage](#usage)
     * [As a library](#as-a-library)
         * [Connect to a storage device](#connect-to-a-storage-device)
-        * [Disconnect from a storage device](#disconnect-from-a-storage-device)
+        * [Disconnect a device from storage system](#disconnect-a-device-from-storage-system)
     * [As a client](#as-a-client)
         * [Show the goock version](#show-the-goock-version)
         * [Connect to a LUN on specific target](#connect-to-a-lun-on-specific-target)
         * [Connect and rescan all LUNs from a target](#connect-and-rescan-all-luns-from-a-target)
+        * [Disconnect a device from remote system](#disconnect-a-lun-from-storage-system)
         * [Get help](#get-help)
 * [Testing](#testing)
     * [Unit test](#unit-test)
@@ -39,6 +40,7 @@ developers and administrators.
 
 This project is inspired by OpenStack project
 [os-brick](https://github.com/openstack/os-brick)
+
 ## Features
 
 * Discovery of devices for iSCSI transport protocol.
@@ -48,12 +50,33 @@ This project is inspired by OpenStack project
 
 ## Installation
 
-download the source from github
+Note: if you want build binary from source, please firstly [setup Go environment](https://golang.org/doc/).
+
+- Download the source and it's dependencies from github
 
 ```
 go get -d -v -t github.com/peter-wangxu/goock
 ```
+- Build the binary
 
+```bash
+go build
+```
+a binary file named `goock` will be in place for use.
+
+- Install tools
+
+This step installs couple of tools that goock relies on. 
+
+On Debian/Ubuntu
+```bash
+sudo apt-get install open-iscsi multipath-tools sysfsutils sg3-utils
+```
+On RHEL/CentOS
+
+```bash
+yum install iscsi-initiator-utils device-mapper-multipath sysfsutils sg3_utils
+```
 ## Requirements
 
 Goock can be built or developed on both Linux or Windows platform.
@@ -87,7 +110,7 @@ conn.TargetPortals = []int{10}
 deviceInfo, _ : = iscsi.ConnectVolume(conn)
 ```
 
-#### Disconnect from a storage device
+#### Disconnect a device from storage system
 
 ```go
 package main
@@ -107,9 +130,14 @@ deviceInfo, _ : = iscsi.DisconnectVolume(conn)
 ```
 
 ### As a client tool
+
 Goock is also client tool, which can be used from shell. When the host is connecting with
 backend storage(such as enterprise array, DellEMC Unity, HPE 3Par etc.), goock can be helpful
 to connect with the storage device and inspect its information.
+
+
+NOTE: make sure you have permission to operate the block device.
+
 
 Example usage below:
 
@@ -130,10 +158,14 @@ goock connect <target IP> [LUN ID]
 #### Connect and rescan all LUNs from a target
 
 ```bash
-
 goock connect <target IP>
-
 ```
+
+#### Disconnect a LUN from storage system
+ 
+ ```bash
+ goock disconnect <Target IP> <LUN ID>
+ ```
 
 #### Get help
 
@@ -143,7 +175,7 @@ goock help connect
 ## Testing
 
 ### Unit test
-```
+```bash
 cd goock
 go test -v ./...
 ```
