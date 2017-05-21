@@ -104,6 +104,7 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 		// create a new scanner and read the file line by line
 		scanner := bufio.NewScanner(file)
 		var buffer bytes.Buffer
+		// Default status code to -1 to prevent unexpected success.
 		cmdStatus := "-1"
 		isFirstLine := true
 		for scanner.Scan() {
