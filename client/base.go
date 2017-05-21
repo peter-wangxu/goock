@@ -16,6 +16,7 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"github.com/peter-wangxu/goock/connector"
 	"github.com/peter-wangxu/goock/exec"
 	"github.com/peter-wangxu/goock/linux"
@@ -23,7 +24,6 @@ import (
 	"github.com/peter-wangxu/goock/util"
 	"github.com/sirupsen/logrus"
 	"os"
-	"fmt"
 )
 
 var log *logrus.Logger = logrus.New()
@@ -54,7 +54,6 @@ func InitLog(debug bool) error {
 	util.SetLogger(log)
 	return nil
 }
-
 
 // Handle the Extend request based the device type
 func HandleExtend(args ...string) error {

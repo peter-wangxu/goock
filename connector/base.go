@@ -64,8 +64,6 @@ type VolumeInfo struct {
 	Multipath   string
 }
 
-
-
 // Defining these interfaces is mainly for unit testing
 // Any caller of ISCSIConnector can implement this interface for testing purpose
 
@@ -84,7 +82,6 @@ type ISCSIInterface interface {
 	LoginPortal(targetPortal string, targetIqn string) error
 	DiscoverPortal(targetPortal ...string) []model.ISCSISession
 }
-
 
 var log *logrus.Logger = logrus.New()
 

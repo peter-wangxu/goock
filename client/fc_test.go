@@ -1,8 +1,8 @@
 package client
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestHandleFCConnect(t *testing.T) {
