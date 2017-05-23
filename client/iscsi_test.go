@@ -49,6 +49,9 @@ func (fake *FakeISCSIConnector) DiscoverPortal(targetPortal ...string) []model.I
 
 	return nil
 }
+func (fake *FakeISCSIConnector) SetNode2Auto(targetPortal string, targetIqn string) error {
+	return nil
+}
 
 // Testing
 

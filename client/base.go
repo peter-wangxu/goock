@@ -40,6 +40,7 @@ func InitLog(debug bool) error {
 
 		// Only log the warning severity or above.
 		log.Level = logrus.DebugLevel
+		log.Formatter = &logrus.TextFormatter{}
 
 	} else {
 		log = logrus.New()
