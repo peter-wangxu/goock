@@ -34,6 +34,16 @@ const (
 	ISCSIPathPattern = "/dev/disk/by-path/ip-%s-iscsi-%s-lun-%d"
 )
 
+type OPERATION_ENUM StringEnum
+
+const (
+	OPERATION_NEW            OPERATION_ENUM = "new"
+	OPERATION_DELETE         OPERATION_ENUM = "new"
+	OPERATION_UPDATE         OPERATION_ENUM = "update"
+	OPERATION_SHOW           OPERATION_ENUM = "show"
+	OPERATION_NON_PERSISTENT OPERATION_ENUM = "nonpersistent"
+)
+
 func SetExecutor(e exec.Interface) {
 	executor = e
 }
@@ -67,9 +77,6 @@ func (iscsi *ISCSIConnector) GetHostInfo(args []string) (HostInfo, error) {
 	info.Hostname = hostName
 	return info, err
 
-}
-func (iscsi *ISCSIConnector) getSearchPath() string {
-	return "/dev/disk/by-path/"
 }
 
 func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
@@ -110,7 +117,6 @@ func (iscsi *ISCSIConnector) DiscoverPortal(targetPortal ...string) []model.ISCS
 
 // Login all target portals if needed
 // TODO(peter) consider using goroutine to login concurrently?
-// TODO(peter) set the session/node to "automatic"
 func (iscsi *ISCSIConnector) LoginPortal(targetPortal string, targetIqn string) error {
 	sessions := iscsi.getIscsiSessions()
 	// If already logged in, skipped
@@ -126,10 +132,26 @@ func (iscsi *ISCSIConnector) LoginPortal(targetPortal string, targetIqn string) 
 		}
 	}
 	if loggedIn != true {
-		_, errLogin := iscsi.exec.Command("iscsiadm", "-m", "node", "-T", targetIqn, "-p", targetPortal, "--login").CombinedOutput()
+		_, errLogin := iscsi.exec.Command("iscsiadm", "-m", "node", "-p", targetPortal, "-T", targetIqn, "--login").CombinedOutput()
 		err = errLogin
 	}
 	return err
+}
+
+// Set the node to 'node.startup = automatic', it will login the portal
+// automatically after reboot
+func (iscsi *ISCSIConnector) SetNode2Auto(targetPortal string, targetIqn string) error {
+	operations := iscsi.composeISCSIOperation(targetPortal, targetIqn, OPERATION_UPDATE, "node.startup", "automatic")
+	_, err := iscsi.exec.Command("iscsiadm", operations...).CombinedOutput()
+	return err
+}
+
+func (iscsi *ISCSIConnector) composeISCSIOperation(targetPortal string, targetIqn string,
+	operation OPERATION_ENUM, key string, value string) []string {
+	return []string{
+		"-m", "node", "-p", targetPortal, "-T", targetIqn,
+		"--op", string(operation), "-n", key, "-v", value,
+	}
 }
 
 func (iscsi *ISCSIConnector) rescanISCSI() {
@@ -144,7 +166,6 @@ func (iscsi *ISCSIConnector) filterTargets(sessions []model.ISCSISession, connec
 		currPortals = append(currPortals, session.TargetPortal)
 	}
 
-	//targetIqns := connectionProperty.TargetIqns
 	targetPortals := connectionProperty.TargetPortals
 	var notLogged []string
 	for _, portal := range targetPortals {
@@ -185,6 +206,8 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 		// but the os-brick says parallel login can crash open-iscsi
 		for _, newSession := range discovered {
 			iscsi.LoginPortal(newSession.TargetPortal, newSession.TargetIqn)
+			iscsi.SetNode2Auto(newSession.TargetPortal, newSession.TargetIqn)
+
 		}
 
 	}

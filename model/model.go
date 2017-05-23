@@ -212,13 +212,15 @@ func NewISCSISession() []ISCSISession {
 
 // Discover all the targets provided by targetPortals
 // Use goroutine to accelerate the target discovery process.
-
+// the "--op new" is important, or the existing node info will be overwritten
+// after the discovery.
 func DiscoverISCSISession(targetPortals []string) []ISCSISession {
 	var results []ISCSISession
 	c := make(chan []ISCSISession, len(targetPortals))
 	for _, portal := range targetPortals {
 		discovery := []string{
 			"-m", "discovery", "-t", "sendtargets", "-I", "default", "-p", portal,
+			"--op", "new",
 		}
 		go func() {
 			session := ISCSISession{parser: &LineParser{Delimiter: "\\n+"}}
@@ -239,8 +241,8 @@ func DiscoverISCSISession(targetPortals []string) []ISCSISession {
 		}
 		log.WithFields(
 			logrus.Fields{
-				"Target":     targetPortals,
-				"Discovered": strings.Join(discoveredTargets, ", ")}).Debug(
+				"target":     targetPortals,
+				"discovered": strings.Join(discoveredTargets, ", ")}).Debug(
 			"Discover result")
 	}
 	return results

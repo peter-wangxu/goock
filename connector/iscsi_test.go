@@ -51,6 +51,15 @@ func TestISCSIConnector_LoginISCSIPortal(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestISCSIConnector_SetNode2Auto(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	model.SetExecutor(test.NewMockExecutor())
+	iscsi := NewISCSIConnector()
+	err := iscsi.SetNode2Auto("110.244.213.177:3260", "iqn.1992-04.com.emc:cx.fnm00150600267.a0")
+	assert.Nil(t, err)
+
+}
+
 func TestISCSIConnector_ConnectVolume_NoProp(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	goockutil.SetExecutor(test.NewMockExecutor())

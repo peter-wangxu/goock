@@ -80,6 +80,7 @@ type ISCSIInterface interface {
 	DisconnectVolume(connectionProperty ConnectionProperty) error
 	ExtendVolume(connectionProperty ConnectionProperty) error
 	LoginPortal(targetPortal string, targetIqn string) error
+	SetNode2Auto(targetPortal string, targetIqn string) error
 	DiscoverPortal(targetPortal ...string) []model.ISCSISession
 }
 
