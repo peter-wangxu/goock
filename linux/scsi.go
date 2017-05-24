@@ -18,6 +18,7 @@ package linux
 import (
 	"fmt"
 	"github.com/peter-wangxu/goock/model"
+	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -68,9 +69,9 @@ func CheckReadWrite(path string, wwn string) bool {
 func GetDeviceSize(path string) int {
 	output, err := executor.Command("blockdev", "--getsize64", path).CombinedOutput()
 	if nil != err {
-		log.WithError(err).Warn("Unable to get size of device %s", path)
+		log.WithError(err).Warnf("Unable to get size of device %s", path)
 	}
-	trimmed := strings.Trim(string(output), " ")
+	trimmed := strings.TrimSpace(string(output))
 	if trimmed == "" {
 		return 0
 	}
@@ -107,7 +108,6 @@ func RemoveSCSIDevice(path string) {
 		FlushDeviceIO(fmt.Sprintf("/dev/%s", path))
 	}
 
-
 	path = fmt.Sprintf("/sys/block/%s/device/delete", path)
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader("1"))
@@ -123,22 +123,45 @@ func FlushDeviceIO(path string) error {
 	return err
 }
 
-//TODO Add echo_scsi_command for use
-func ExtendDevice(path string) error {
+// Commands example:
+// echo 1 > /sys/bus/scsi/drivers/sd/9:0:0:6/rescan
+func ExtendDevice(path string) (int, error) {
 
-	return nil
+	info, err := GetDeviceInfo(path)
+	if err != nil {
+		return 0, fmt.Errorf("Unable to extend device %s, device info not found", path)
+	}
+	deviceId := info.GetDeviceIdentifier()
+	rescanPath := fmt.Sprintf("/sys/bus/scsi/drivers/sd/%s/rescan", deviceId)
+	deviceSize := GetDeviceSize(path)
+	log.WithFields(logrus.Fields{
+		"path":     path,
+		"device":   deviceId,
+		"original": deviceSize,
+	}).Debug("Begin to extend the device.")
+
+	cmd := executor.Command("tee", "-a", rescanPath)
+	cmd.SetStdin(strings.NewReader("1"))
+	out, err := cmd.CombinedOutput()
+	newSize := GetDeviceSize(path)
+	log.WithFields(logrus.Fields{
+		"path":    path,
+		"newSize": newSize,
+		"output":  out,
+	}).Info("Extend device finished.")
+	return newSize, err
 }
 
 // output:
 // sudo sg_scan /dev/disk/by-path/pci-0000:05:00.1-fc-0x5006016d09200925-lun-0
 // /dev/disk/by-path/pci-0000:05:00.1-fc-0x5006016d09200925-lun-0: scsi9 channel=0 id=0 lun=0 [em]
-func GetDeviceInfo(path string) model.DeviceInfo {
+func GetDeviceInfo(path string) (model.DeviceInfo, error) {
 	devices := model.NewDeviceInfo(path)
 	if len(devices) <= 0 {
 		log.Warn("Unable to get device info for device ", path)
-		return model.DeviceInfo{}
+		return model.DeviceInfo{}, fmt.Errorf("Unable to get device info.")
 	}
-	return devices[0]
+	return devices[0], nil
 }
 
 // TODO Add the commands here

@@ -1,0 +1,2 @@
+0
+/dev/sdg: scsi9 channel=2 id=1 lun=9 [em]

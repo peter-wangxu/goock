@@ -128,9 +128,23 @@ func TestHandleDisISCSIConnectViaDevice(t *testing.T) {
 	err := HandleISCSIDisconnect("/dev/sdb")
 	assert.Error(t, err)
 }
+
+func TestHandleExtend(t *testing.T) {
+	fake := &FakeISCSIConnector{}
+	SetISCSIConnector(fake)
+	err := HandleISCSIExtend("192.168.1.30", "1")
+	assert.Nil(t, err)
+}
+
 func TestBeautifyVolumeInfo(t *testing.T) {
 	info := connector.VolumeInfo{Paths: []string{"/dev/disk/by-path/xxxxxxxxxxxxxxxx", "/dev/disk/by-path/yyyyyyyyyyyyyyyyyy"},
 		MultipathId: "351160160b6e00e5a50060160b6e00e5a", Wwn: "351160160b6e00e5a50060160b6e00e5a",
 		Multipath: "/dev/mapper/351160160b6e00e5a50060160b6e00e5a"}
 	BeautifyVolumeInfo(info)
+}
+
+func TestValidateLunId(t *testing.T) {
+	lunids, err := ValidateLunId([]string{"a", "b"})
+	assert.Error(t, err)
+	assert.Len(t, lunids, 0)
 }

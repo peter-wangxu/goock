@@ -178,14 +178,22 @@ func (iscsi *ISCSIConnector) filterTargets(sessions []model.ISCSISession, connec
 
 // Update the local kernel's size information
 func (iscsi *ISCSIConnector) ExtendVolume(connectionProperty ConnectionProperty) error {
-
+	var err error
 	paths := iscsi.getVolumePaths(connectionProperty)
-	for _, path := range paths {
-		linux.ExtendDevice(path)
+	paths, _ = goockutil.FilterPath(paths)
+
+	if len(paths) > 0 {
+		// Flush size of each single path
+		for _, path := range paths {
+			linux.ExtendDevice(path)
+		}
+		// Flush size for multipath descriptor
+		mpathId := linux.GetWWN(paths[0])
+		err = linux.ResizeMpath(mpathId)
+	} else {
+		err = fmt.Errorf("Unable to find any path to extend.")
 	}
-	mpathId := linux.GetWWN(paths[0])
-	linux.ResizeMpath(mpathId)
-	return nil
+	return err
 }
 
 // Attach the volume from the remote to the local

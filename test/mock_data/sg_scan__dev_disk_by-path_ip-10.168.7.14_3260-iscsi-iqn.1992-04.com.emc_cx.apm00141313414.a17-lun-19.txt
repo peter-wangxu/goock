@@ -1,0 +1,2 @@
+0
+/dev/disk/by-path/ip-10.168.7.14:3260-iscsi-iqn.1992-04.com.emc:cx.apm00141313414.a17.a17-lun-19: scsi9 channel=0 id=0 lun=11 [em]

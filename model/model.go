@@ -16,6 +16,7 @@ limitations under the License.
 package model
 
 import (
+	"fmt"
 	"github.com/peter-wangxu/goock/exec"
 	"github.com/sirupsen/logrus"
 	"reflect"
@@ -481,11 +482,9 @@ type DeviceInfo struct {
 	params  []string
 	Device  string
 	Host    string
-	// numbered host
-	HostNumber int
-	Channel    int
-	Target     int
-	Lun        int
+	Channel int
+	Target  int
+	Lun     int
 }
 
 func (d *DeviceInfo) GetPattern() interface{} {
@@ -534,6 +533,16 @@ func (d *DeviceInfo) Parse() []DeviceInfo {
 		list[i] = *s
 	}
 	return list
+}
+
+func (d *DeviceInfo) GetHostId() int {
+	i, _ := strconv.Atoi(strings.Replace(d.Host, "scsi", "", -1))
+	return i
+}
+
+// Returns a string with format: <host>:<channel>:<Target>:<Lun>
+func (d *DeviceInfo) GetDeviceIdentifier() string {
+	return fmt.Sprintf("%d:%d:%d:%d", d.GetHostId(), d.Channel, d.Target, d.Lun)
 }
 
 func NewDeviceInfo(path string) []DeviceInfo {

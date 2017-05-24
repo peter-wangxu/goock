@@ -108,10 +108,12 @@ func TestNewDeviceInfo(t *testing.T) {
 	devices := NewDeviceInfo("/dev/sdb")
 	assert.Len(t, devices, 1)
 	assert.Equal(t, devices[0].Device, "/dev/sdb")
-	assert.Equal(t, devices[0].Host, "scsi0")
-	assert.Equal(t, devices[0].Channel, 1)
-	assert.Equal(t, devices[0].Target, 0)
-	assert.Equal(t, devices[0].Lun, 0)
+	assert.Equal(t, "scsi0", devices[0].Host)
+	assert.Equal(t, 1, devices[0].Channel)
+	assert.Equal(t, 0, devices[0].Target)
+	assert.Equal(t, 0, devices[0].Lun)
+	assert.Equal(t, 0, devices[0].GetHostId())
+	assert.Equal(t, "0:1:0:0", devices[0].GetDeviceIdentifier())
 }
 func TestRegSplit(t *testing.T) {
 	var s = `|-+- policy='round-robin 0' prio=50 status=active
