@@ -61,15 +61,13 @@ func HandleExtend(args ...string) error {
 	var err error
 	if len(args) <= 0 {
 		err = fmt.Errorf("Need device name or Target IP with LUN ID.")
-	}
-	if len(args) == 1 {
+	} else if len(args) == 1 {
 		// User only supplies the local device name
-
+		err = fmt.Errorf("Currently device name is not supported.")
 	} else {
 		// User specify TargetIP with LUN ID
+		err = HandleISCSIExtend(args...)
 	}
-	if err != nil {
-		return err
-	}
-	return HandleISCSIExtend(args...)
+	return err
+
 }

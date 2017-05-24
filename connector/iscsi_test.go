@@ -127,4 +127,44 @@ func TestISCSIConnector_DisconnectVolume(t *testing.T) {
 
 func TestISCSIConnector_DisconnectVolumeNoMultipath(t *testing.T) {
 	//TODO(peter) wait for test data feeding feature
+
+}
+
+func TestISCSIConnector_ExtendVolume(t *testing.T) {
+	linux.SetExecutor(test.NewMockExecutor())
+	model.SetExecutor(test.NewMockExecutor())
+	iscsi := NewISCSIConnector()
+	fakeProperty := ConnectionProperty{}
+	fakeProperty.TargetIqns = []string{
+		"iqn.1992-04.com.emc:cx.apm00141313414.a17",
+		"iqn.1992-04.com.emc:cx.apm00141313414.b17",
+	}
+	fakeProperty.TargetPortals = []string{
+		"10.168.7.14:3260",
+		"10.168.7.15:3260",
+	}
+	fakeProperty.TargetLuns = []int{
+		19,
+		19,
+	}
+	err := iscsi.ExtendVolume(fakeProperty)
+	assert.Nil(t, err)
+}
+
+func TestISCSIConnector_ExtendVolumeNoAnyPath(t *testing.T) {
+	linux.SetExecutor(test.NewMockExecutor())
+	model.SetExecutor(test.NewMockExecutor())
+	iscsi := NewISCSIConnector()
+	fakeProperty := ConnectionProperty{}
+	fakeProperty.TargetIqns = []string{
+		"iqn.1992-04.com.emc:cx.apm55555555555.b17",
+	}
+	fakeProperty.TargetPortals = []string{
+		"10.168.7.199:3260",
+	}
+	fakeProperty.TargetLuns = []int{
+		19,
+	}
+	err := iscsi.ExtendVolume(fakeProperty)
+	assert.Error(t, err)
 }

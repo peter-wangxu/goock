@@ -113,7 +113,17 @@ func HandleISCSIDisconnect(args ...string) error {
 }
 
 func HandleISCSIExtend(args ...string) error {
-	return nil
+	targetIp := args[0]
+	lunIds, err := ValidateLunId(args[1:])
+
+	sessions := iscsiConnector.DiscoverPortal(targetIp)
+	if err == nil {
+		for _, lun := range lunIds {
+			property := Session2ConnectionProperty(sessions, lun)
+			iscsiConnector.ExtendVolume(property)
+		}
+	}
+	return err
 }
 
 func FetchVolumeInfo(sessions []model.ISCSISession, lun int) (connector.VolumeInfo, error) {
@@ -151,6 +161,9 @@ func ValidateLunId(lunIds []string) ([]int, error) {
 		}
 		i, _ := strconv.Atoi(lun)
 		ret = append(ret, i)
+	}
+	if len(ret) <= 0 {
+		log.Warnf("No lun ID specified, correct and retry.")
 	}
 	return ret, err
 }

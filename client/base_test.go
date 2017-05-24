@@ -24,5 +24,5 @@ func TestHandleExtendEmpty(t *testing.T) {
 
 func TestHandleExtendLocal(t *testing.T) {
 	err := HandleExtend("/dev/sdm")
-	assert.Nil(t, err)
+	assert.Error(t, err)
 }

@@ -57,13 +57,42 @@ func TestRemoveSCSIDeviceWithPath(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	RemoveSCSIDevice("/dev/sdx")
 }
+
+func TestFlushDeviceIO(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	err := FlushDeviceIO("/dev/sdm")
+	assert.Nil(t, err)
+}
+
+func TestExtendDevice(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	model.SetExecutor(test.NewMockExecutor())
+
+	newSize, err := ExtendDevice("/dev/sdg")
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2147483648, newSize)
+
+}
+
+func TestExtendDeviceNoDeviceInfo(t *testing.T) {
+	model.SetExecutor(test.NewMockExecutor())
+	_, err := ExtendDevice("/dev/unknown")
+	assert.Error(t, err)
+}
+
 func TestGetDeviceInfo(t *testing.T) {
 	model.SetExecutor(test.NewMockExecutor())
-	info := GetDeviceInfo("/dev/sdb")
+	info, err := GetDeviceInfo("/dev/sdb")
+	assert.Nil(t, err)
 	assert.Equal(t, "/dev/sdb", info.Device)
+	assert.Equal(t, "scsi0", info.Host)
+	assert.Equal(t, 0, info.GetHostId())
+	assert.Equal(t, "0:1:0:0", info.GetDeviceIdentifier())
 }
 func TestGetDeviceInfoNotFound(t *testing.T) {
 	model.SetExecutor(test.NewMockExecutor())
-	info := GetDeviceInfo("/dev/sdx")
+	info, err := GetDeviceInfo("/dev/sdx")
+	assert.Error(t, err)
 	assert.Equal(t, "", info.Device)
 }

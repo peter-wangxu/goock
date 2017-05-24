@@ -21,6 +21,7 @@ efforts needed when connecting/disconnecting to storage backend.
         * [Connect to a LUN on specific target](#connect-to-a-lun-on-specific-target)
         * [Connect and rescan all LUNs from a target](#connect-and-rescan-all-luns-from-a-target)
         * [Disconnect a device from remote system](#disconnect-a-lun-from-storage-system)
+        * [Extend a connected device](#extend-a-connected-device)
         * [Get help](#get-help)
 * [Testing](#testing)
     * [Unit test](#unit-test)
@@ -129,6 +130,28 @@ conn.TargetPortals = []int{10}
 deviceInfo, _ : = iscsi.DisconnectVolume(conn)
 ```
 
+#### Extend a already connected device
+
+Sometimes, the device can be extend on the storage system, while the device size
+is not awared from the host side, in this case, a host side rescan is needed.
+
+```go
+package main
+
+import (
+        "github.com/peter-wangxu/goock/connector"
+)
+
+iscsi := connector.New()
+
+conn := connector.ConnectionProperty{}
+conn.TargetPortals = []string{"192.168.1.30"}
+conn.TargetIqns = []string{"iqn.xxxxxxxxxxxxxx"}
+conn.TargetPortals = []int{10}
+
+deviceInfo, _ : = iscsi.ExtendVolume(conn)
+```
+
 ### As a client tool
 
 Goock is also client tool, which can be used from shell. When the host is connecting with
@@ -166,6 +189,17 @@ goock connect <target IP>
  ```bash
  goock disconnect <Target IP> <LUN ID>
  ```
+
+#### Extend a connected device
+
+```bash
+goock extend <Target IP> <LUN ID>
+```
+or
+
+```bash
+goock extend /dev/sdx
+```
 
 #### Get help
 
