@@ -99,14 +99,28 @@ func ScanSCSIBus(path string, content string) error {
 // Use echo 1 > /sys/block/%s/device/delete to force delete the device
 func RemoveSCSIDevice(path string) {
 	if strings.Contains(path, string(filepath.Separator)) {
+		// Before remove the device from host, flush buffers to disk
+		FlushDeviceIO(path)
 		// Get the file name from the full path, ex : /dev/sdb -> sdb
 		_, path = filepath.Split(path)
+	} else {
+		FlushDeviceIO(fmt.Sprintf("/dev/%s", path))
 	}
+
+
 	path = fmt.Sprintf("/sys/block/%s/device/delete", path)
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader("1"))
 	out, _ := cmd.CombinedOutput()
 	log.Debugf("Remove device [%s] with output : [%s]", path, out)
+}
+
+// path = "/dev/sdb" or "
+// "/dev/disk/by-path/ip-10.244.213.177:3260-iscsi-iqn.1992-04.com.emc:cx.fnm00150600267.a0-lun-10"
+func FlushDeviceIO(path string) error {
+	cmd := executor.Command("blockdev", "-v", "--flushbufs", path)
+	_, err := cmd.CombinedOutput()
+	return err
 }
 
 //TODO Add echo_scsi_command for use

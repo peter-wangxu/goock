@@ -57,6 +57,12 @@ func TestRemoveSCSIDeviceWithPath(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	RemoveSCSIDevice("/dev/sdx")
 }
+
+func TestFlushDeviceIO(t *testing.T) {
+	SetExecutor(test.NewMockExecutor())
+	err := FlushDeviceIO("/dev/sdm")
+	assert.Nil(t, err)
+}
 func TestGetDeviceInfo(t *testing.T) {
 	model.SetExecutor(test.NewMockExecutor())
 	info := GetDeviceInfo("/dev/sdb")
