@@ -28,6 +28,25 @@ import (
 
 var log *logrus.Logger = logrus.New()
 
+var VolumeFormat = `Volume Information:
+Multipath    : %s
+Single paths :
+%s
+Multipath ID : %s
+WWN          : %s
+`
+
+var HostInfoFormat = `Volume Information:
+iSCSI Qualified Name(IQN)      :
+%s
+Host Bus Adapter               :
+%s
+Connected Fibre Channel Target :
+%s
+Connected iSCSI sessions       :
+%s
+`
+
 // Enable the console log for client
 func InitLog(debug bool) error {
 	if debug {
@@ -70,4 +89,29 @@ func HandleExtend(args ...string) error {
 	}
 	return err
 
+}
+
+func HandleInfo(args ...string) error {
+	hostInfo, err := connector.GetHostInfo()
+	if err == nil {
+		BeautifyHostInfo(hostInfo)
+	} else {
+		log.WithError(err).Warn("Unable to get host information, not privileged or tools not installed?")
+	}
+	return err
+}
+
+// BeautifyHostInfo prints the output to console
+func BeautifyHostInfo(info connector.HostInfo) {
+	var wwns []string
+	var targetWwns []string
+
+	for i, wwnns := range info.Wwnns {
+		wwns = append(wwns, wwnns+":"+info.Wwpns[i])
+	}
+
+	for j, targetWwnns := range info.TargetWwnns {
+		targetWwns = append(targetWwns, targetWwnns+":"+info.TargetWwpns[j])
+	}
+	fmt.Printf(HostInfoFormat, info.Initiator, wwns, targetWwns, "fakeIP")
 }

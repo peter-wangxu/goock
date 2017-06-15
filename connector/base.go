@@ -18,43 +18,75 @@ package connector
 
 import (
 	"fmt"
+	"github.com/peter-wangxu/goock/exec"
 	"github.com/peter-wangxu/goock/model"
 	"github.com/sirupsen/logrus"
+	"os"
+	"regexp"
+	"runtime"
 )
 
 type StringEnum string
 
 const (
-	READWRITE StringEnum = "rw"
-	READONLY  StringEnum = "ro"
+	ReadWrite StringEnum = "rw"
+	ReadOnly  StringEnum = "ro"
 )
 
 const (
-	ISCSI_PROTOCOL StringEnum = "iscsi"
-	FC_PROTOCOL    StringEnum = "fc"
+	IscsiProtocol StringEnum = "iscsi"
+	FcProtocol    StringEnum = "fibre_channel"
 )
 
 type ConnectionProperty struct {
-	TargetIqns      []string
-	TargetPortals   []string
-	TargetLuns      []int
-	StorageProtocol string
+	// Only for iscsi
+	TargetIqns    []string
+	TargetPortals []string
+	TargetLuns    []int
+	// Only for fibre channel
+	TargetWwns []string
+	TargetLun  int
+	// Shared by fibre change and iscsi
+	StorageProtocol StringEnum
 	AccessMode      StringEnum
 }
 
-// Validate whether the ConnectionProperty is empty
+var executor = exec.New()
+
+func SetExecutor(e exec.Interface) {
+	executor = e
+}
+
+// IsEmpty validates whether the ConnectionProperty is empty
 func (prop ConnectionProperty) IsEmpty() error {
-	if len(prop.TargetPortals) == 0 || len(prop.TargetLuns) == 0 {
-		return fmt.Errorf("An empty ConnectionProperty is specified, forget target IP or LUN id?")
+	if prop.StorageProtocol == IscsiProtocol {
+		if len(prop.TargetPortals) == 0 || len(prop.TargetLuns) == 0 {
+			return fmt.Errorf("An empty ConnectionProperty is specified, forget target IPs or LUN id?")
+		}
+	} else if prop.StorageProtocol == FcProtocol {
+		if len(prop.TargetWwns) == 0 || len(prop.TargetLuns) == 0 {
+			return fmt.Errorf("An empty ConnectionProperty is specified, forget target wwns or LUN id?")
+		}
+	} else {
+		return fmt.Errorf("Unknown storage protocol specified.")
 	}
+
 	return nil
 }
 
 type HostInfo struct {
 	Initiator string
-	Ip        string
-	Hostname  string
-	OSType    string
+	// Wwnns: the node name of the host HBA
+	Wwnns []string
+	// Wwpns: the port name of the HOST HBA
+	Wwpns []string
+	// TargetWwnns: the node name of connected targets
+	TargetWwnns []string
+	// TargetWwpns: the port name of connected targets
+	TargetWwpns []string
+	Ip          string
+	Hostname    string
+	OSType      string
 }
 
 type VolumeInfo struct {
@@ -68,14 +100,14 @@ type VolumeInfo struct {
 // Any caller of ISCSIConnector can implement this interface for testing purpose
 
 type Interface interface {
-	GetHostInfo(args []string) (HostInfo, error)
+	GetHostInfo() (HostInfo, error)
 	ConnectVolume(connectionProperty ConnectionProperty) (VolumeInfo, error)
 	DisconnectVolume(connectionProperty ConnectionProperty) error
 	ExtendVolume(connectionProperty ConnectionProperty) error
 }
 
 type ISCSIInterface interface {
-	GetHostInfo(args []string) (HostInfo, error)
+	GetHostInfo() (HostInfo, error)
 	ConnectVolume(connectionProperty ConnectionProperty) (VolumeInfo, error)
 	DisconnectVolume(connectionProperty ConnectionProperty) error
 	ExtendVolume(connectionProperty ConnectionProperty) error
@@ -84,8 +116,67 @@ type ISCSIInterface interface {
 	DiscoverPortal(targetPortal ...string) []model.ISCSISession
 }
 
+type FibreChannelInterface interface {
+	GetHostInfo() (HostInfo, error)
+	ConnectVolume(connectionProperty ConnectionProperty) (VolumeInfo, error)
+	DisconnectVolume(connectionProperty ConnectionProperty) error
+	ExtendVolume(connectionProperty ConnectionProperty) error
+}
+
 var log *logrus.Logger = logrus.New()
 
 func SetLogger(l *logrus.Logger) {
 	log = l
+}
+
+// Common functions
+
+// Specific handling for LUN ID.
+// For lun id < 256, the return should be as original
+// For lun id >= 256, return "0x" prefixed string
+func FormatLuns(luns ...int) []string {
+	var formated []string
+	for _, lun := range luns {
+		var s string
+		if lun < 256 {
+			s = fmt.Sprintf("%d", lun)
+		} else {
+			s = fmt.Sprintf("0x%04x%04x00000000", lun&0xffff, lun>>16&0xffff)
+		}
+		formated = append(formated, s)
+	}
+	return formated
+}
+
+// GetHostInfo returns host iscsi and fc related information
+func GetHostInfo() (HostInfo, error) {
+	var info HostInfo
+
+	filePath := "/etc/iscsi/initiatorname.iscsi"
+	cmd := executor.Command("cat", filePath)
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		// Log warning
+		pattern, _ := regexp.Compile("InitiatorName=(?P<name>.*)\n$")
+		matches := pattern.FindStringSubmatch(string(out))
+		if len(matches) >= 2 {
+			info.Initiator = matches[1]
+		}
+	} else {
+		log.WithError(err).Debugf("Unable to fetch iscsi iqn under %s, permission denied or iscsi is not installed?", filePath)
+	}
+	info.OSType = runtime.GOOS
+	info.Hostname, _ = os.Hostname()
+	hbas := model.NewHBA()
+	for _, hba := range hbas {
+		info.Wwnns = append(info.Wwnns, hba.NodeName)
+		info.Wwpns = append(info.Wwpns, hba.PortName)
+	}
+	targets := model.NewFibreChannelTarget()
+	for _, target := range targets {
+		info.TargetWwnns = append(info.TargetWwnns, target.NodeName)
+		info.TargetWwpns = append(info.TargetWwpns, target.PortName)
+	}
+
+	return info, err
 }

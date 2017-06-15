@@ -15,8 +15,31 @@ limitations under the License.
 */
 package client
 
+import (
+	"fmt"
+	"github.com/peter-wangxu/goock/connector"
+)
+
+var fcConnector = connector.NewFibreChannelConnector()
+
+func SetFcConnector(fc connector.FibreChannelInterface) {
+	fcConnector = fc
+}
+
 func HandleFCConnect(args ...string) error {
-	return nil
+	var err error
+	if len(args) <= 0 {
+		log.Error("[wwn] and/or [lun id] are required.")
+		err = fmt.Errorf("[wwn] and/or [lun id] are required.")
+	} else if len(args) == 1 {
+		// User only supply the LUN ID, so did a wildcard scan for all connected targets
+		fcConnector.GetHostInfo()
+	} else {
+		err = fmt.Errorf("Currently [wwn] with [lun id] is not supported.")
+		log.WithError(err).Error("Unsupported parameters.")
+	}
+
+	return err
 }
 
 func HandleFCExtend(args ...string) error {

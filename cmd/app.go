@@ -94,7 +94,7 @@ func NewApp() *App {
 			Action: func(c *cli.Context) error {
 				// Enable debug log from console
 				client.InitLog(enableDebug)
-				return nil
+				return client.HandleInfo(c.Args()...)
 			},
 		},
 	}

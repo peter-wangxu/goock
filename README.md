@@ -1,9 +1,10 @@
 # Goock
 
-[![CircleCI](https://img.shields.io/circleci/project/github/peter-wangxu/goock/master.svg?style=plastic)]()
-[![Codecov](https://img.shields.io/codecov/c/github/peter-wangxu/goock/master.svg?style=plastic)]()
+[![Go Report Card](https://goreportcard.com/badge/github.com/peter-wangxu/goock)](https://goreportcard.com/report/github.com/peter-wangxu/goock)
+[![CircleCI](https://img.shields.io/circleci/project/github/peter-wangxu/goock/master.svg?style=flat-square)](https://circleci.com/gh/peter-wangxu/goock)
+[![Codecov](https://img.shields.io/codecov/c/github/peter-wangxu/goock/master.svg?style=flat-square)](https://codecov.io/gh/peter-wangxu/goock)
 
-Goock is a `Go` library/client for discovering and managing block device. it dramatically eases the
+Goock is a `Golang` library/client for discovering and managing block device. it dramatically eases the
 efforts needed when connecting/disconnecting to storage backend.
 
 ## Table of Content

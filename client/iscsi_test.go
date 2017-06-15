@@ -11,7 +11,7 @@ import (
 type FakeISCSIConnector struct {
 }
 
-func (fake *FakeISCSIConnector) GetHostInfo(args []string) (connector.HostInfo, error) {
+func (fake *FakeISCSIConnector) GetHostInfo() (connector.HostInfo, error) {
 	return connector.HostInfo{}, nil
 }
 

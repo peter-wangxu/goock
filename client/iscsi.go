@@ -35,15 +35,15 @@ func Session2ConnectionProperty(sessions []model.ISCSISession, lun int) connecto
 	conn := connector.ConnectionProperty{}
 	var portals []string
 	var iqns []string
-	var lunIds []int
+	var lunIDs []int
 	for _, session := range sessions {
 		portals = append(portals, session.TargetPortal)
 		iqns = append(iqns, session.TargetIqn)
-		lunIds = append(lunIds, lun)
+		lunIDs = append(lunIDs, lun)
 	}
 	conn.TargetIqns = iqns
 	conn.TargetPortals = portals
-	conn.TargetLuns = lunIds
+	conn.TargetLuns = lunIDs
 	return conn
 }
 
@@ -66,12 +66,12 @@ func HandleISCSIConnect(args ...string) error {
 		//}
 	} else {
 		log.Debugf("Trying to validate the target IP : %s, LUN ID: %s", args[0], args[1:])
-		var lunIds []int
-		lunIds, err = ValidateLunId(args[1:])
+		var lunIDs []int
+		lunIDs, err = ValidateLunId(args[1:])
 		if err == nil {
 			targetIP := args[0]
 			sessions := iscsiConnector.DiscoverPortal(targetIP)
-			for _, lun := range lunIds {
+			for _, lun := range lunIDs {
 				volumeInfo, _ := FetchVolumeInfo(sessions, lun)
 				BeautifyVolumeInfo(volumeInfo)
 			}
@@ -96,10 +96,10 @@ func HandleISCSIDisconnect(args ...string) error {
 	} else if len(args) >= 2 {
 
 		targetIP := args[0]
-		lunIds, err := ValidateLunId(args[1:])
+		lunIDs, err := ValidateLunId(args[1:])
 		if err == nil {
 			sessions := iscsiConnector.DiscoverPortal(targetIP)
-			for _, lun := range lunIds {
+			for _, lun := range lunIDs {
 				connectionProperty := Session2ConnectionProperty(sessions, lun)
 				err = iscsiConnector.DisconnectVolume(connectionProperty)
 			}
@@ -114,11 +114,11 @@ func HandleISCSIDisconnect(args ...string) error {
 
 func HandleISCSIExtend(args ...string) error {
 	targetIp := args[0]
-	lunIds, err := ValidateLunId(args[1:])
+	lunIDs, err := ValidateLunId(args[1:])
 
 	sessions := iscsiConnector.DiscoverPortal(targetIp)
 	if err == nil {
-		for _, lun := range lunIds {
+		for _, lun := range lunIDs {
 			property := Session2ConnectionProperty(sessions, lun)
 			iscsiConnector.ExtendVolume(property)
 		}
@@ -132,29 +132,21 @@ func FetchVolumeInfo(sessions []model.ISCSISession, lun int) (connector.VolumeIn
 
 }
 
-var VOLUME_FORMAT = `Volume Information:
-Multipath    : %s
-Single paths :
-%s
-Multipath ID : %s
-WWN          : %s
-`
-
 func BeautifyVolumeInfo(info connector.VolumeInfo) {
-	var beautiPath []string
+	var beautifiedPaths []string
 	for _, path := range info.Paths {
 		path = "  [*] " + path
-		beautiPath = append(beautiPath, path)
+		beautifiedPaths = append(beautifiedPaths, path)
 	}
-	fmt.Printf(fmt.Sprintf(VOLUME_FORMAT, info.Multipath, strings.Join(beautiPath, "\n"),
+	fmt.Printf(fmt.Sprintf(VolumeFormat, info.Multipath, strings.Join(beautifiedPaths, "\n"),
 		info.MultipathId, info.Wwn))
 }
 
-func ValidateLunId(lunIds []string) ([]int, error) {
+func ValidateLunId(lunIDs []string) ([]int, error) {
 	var err error
 	re, _ := regexp.Compile("\\d+")
 	var ret []int
-	for _, lun := range lunIds {
+	for _, lun := range lunIDs {
 		if re.MatchString(lun) == false {
 			err = fmt.Errorf("%s does not look like a LUN ID.", lun)
 			break

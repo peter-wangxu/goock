@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	WAIT_INTERVAL int = 2
+	WaitInterval int = 2
+	MaxWait      int = 10
 )
 
 var log *logrus.Logger = logrus.New()
@@ -44,25 +45,40 @@ func WaitForPath(path string, maxWait int) bool {
 		if err == nil {
 			return true
 		}
-		time.Sleep(time.Second * time.Duration(WAIT_INTERVAL))
+		time.Sleep(time.Second * time.Duration(WaitInterval))
 	}
-	log.Debugf("Path %s does not appear in %v seconds", path, maxWait*WAIT_INTERVAL)
+	log.Debugf("Path %s does not appear in %v seconds", path, maxWait*WaitInterval)
 	return false
 }
 
-// Return immediately once any path found
-func WaitForAnyPath(paths []string) (string, error) {
+// Return immediately once any path found of hook is nil
+// else run the hook and wait
+func WaitForAnyPath(paths []string, hook func()) (string, error) {
 
 	err := errors.New("No path found")
-	for _, path := range paths {
-		err = IsPathExists(path)
-		if err == nil {
-			return path, err
+	maxWait := MaxWait
+	if hook == nil {
+		// Only run once for the paths.
+		maxWait = 1
+	}
+
+	for x := 0; x < maxWait; x++ {
+		for _, path := range paths {
+			err = IsPathExists(path)
+			if err == nil {
+				return path, err
+			}
 		}
+		// Run the hook, such as, Rescan hosts
+		if nil != hook {
+			hook()
+		}
+		time.Sleep(time.Second * time.Duration(WaitInterval))
 	}
 	return "", err
 }
 
+// FilterPath Filters out paths which are not existed.
 func FilterPath(paths []string) ([]string, error) {
 	var newPaths []string
 	for _, path := range paths {
@@ -76,7 +92,7 @@ func FilterPath(paths []string) ([]string, error) {
 	return newPaths, nil
 }
 
-// Returns the paths which are still existing
+// WaitForPathRemoval Returns the paths which are still existing
 func WaitForPathRemoval(paths []string, maxWait int) []string {
 	var left []string
 	for x := 0; x < maxWait; x++ {
@@ -84,7 +100,7 @@ func WaitForPathRemoval(paths []string, maxWait int) []string {
 		if len(left) == 0 {
 			break
 		}
-		time.Sleep(time.Second * time.Duration(WAIT_INTERVAL))
+		time.Sleep(time.Second * time.Duration(WaitInterval))
 	}
 	return left
 }

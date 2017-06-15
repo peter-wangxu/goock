@@ -269,11 +269,11 @@ type HBA struct {
 func (s *HBA) GetPattern() interface{} {
 
 	return []string{
-		"Class Device\\s+=\\s+\"(?P<Name>.*)\"",
-		"Class Device path\\s+=\\s+\"(?P<DevicePath>.*)\"",
-		"fabric_name\\s+=\\s+\"(?P<FabricName>.*)\"",
-		"node_name\\s+=\\s+\"(?P<NodeName>.*)\"",
-		"port_name\\s+=\\s+\"(?P<PortName>.*)\"",
+		"(?m)^\\s+Device\\s+=\\s+\"(?P<Name>.*)\"",
+		"(?m)^\\s+Device path\\s+=\\s+\"(?P<DevicePath>.*)\"",
+		"fabric_name\\s+=\\s+\"0x(?P<FabricName>.*)\"",
+		"node_name\\s+=\\s+\"0x(?P<NodeName>.*)\"",
+		"port_name\\s+=\\s+\"0x(?P<PortName>.*)\"",
 		"port_state\\s+=\\s+\"(?P<PortState>.*)\"",
 		"speed\\s+=\\s+\"(?P<Speed>.*)\"",
 		"supported_speeds\\s+=\\s+\"(?P<SupportedSpeeds>.*)\"",
@@ -316,8 +316,99 @@ func (s *HBA) getOutput() string {
 	return string(out[:])
 }
 
+// Return the id of HBA, host7 -> 7
+func (s *HBA) GetHostId() (int, error) {
+	if s.Name != "" {
+		host := strings.Split(s.Name, "host")
+		return strconv.Atoi(host[1])
+	}
+	return 0, fmt.Errorf("Name of HBA is empty.")
+}
+
 func NewHBA() []HBA {
 	return (&HBA{parser: &PairParser{Delimiter: "\\n{3,}"}}).Parse()
+}
+
+// (FibreChannelTarget) Subclass of Interface
+// Represents the FC targets connected with HBA
+type FibreChannelTarget struct {
+	dataMap         map[string]string
+	parser          Parser
+	ClassDevice     string
+	ClassDevicePath string
+	NodeName        string
+	PortId          string
+	PortName        string
+	Device          string
+	DevicePath      string
+}
+
+func (s *FibreChannelTarget) GetPattern() interface{} {
+
+	return []string{
+		"Class Device\\s+=\\s+\"(?P<ClassDevice>.*)\"",
+		"Class Device path\\s+=\\s+\"(?P<ClassDevicePath>.*)\"",
+		"node_name\\s+=\\s+\"0x(?P<NodeName>.*)\"",
+		"port_id\\s+=\\s+\"(?P<PortId>.*)\"",
+		"port_name\\s+=\\s+\"0x(?P<PortName>.*)\"",
+		"(?m)^\\s+Device\\s+=\\s+\"(?P<Device>.*)\"",
+		"(?m)^\\s+Device path\\s+=\\s+\"(?P<DevicePath>.*)\"",
+	}
+}
+
+func (s *FibreChannelTarget) GetCommand() []string {
+	return []string{"systool", "-c", "fc_transport", "-v"}
+}
+
+func (s *FibreChannelTarget) GetValue(key string) interface{} {
+	return s.dataMap[key]
+}
+
+func (s *FibreChannelTarget) setValue(key string, value interface{}) {
+	ref := reflect.ValueOf(s).Elem()
+	SetValue(ref.FieldByName(key), value)
+}
+
+func (s *FibreChannelTarget) Parse() []FibreChannelTarget {
+	parser := s.parser
+	dataList := parser.Parse(s.getOutput(), s.GetPattern())
+	list := make([]FibreChannelTarget, len(dataList))
+	for i, each := range dataList {
+		s := &FibreChannelTarget{}
+		for k, v := range each {
+			s.setValue(k, v)
+		}
+		list[i] = *s
+	}
+	return list
+}
+
+func (s *FibreChannelTarget) getOutput() string {
+	cmd := s.GetCommand()
+	out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+	if nil != err {
+		return ""
+	}
+	return string(out[:])
+}
+
+// Parse Device  "target9:0:0" to []int{9, 0, 0}
+func (s *FibreChannelTarget) GetHostChannelTarget() ([]int, error) {
+	err := fmt.Errorf("Unable to get Host:Channel:Target, Device is empty.")
+	if s.Device != "" {
+		ids := strings.Split(s.Device, ":")
+		// ids[0] == target9
+		host, _ := strconv.Atoi(ids[0][6:])
+		channel, _ := strconv.Atoi(ids[1])
+		target, _ := strconv.Atoi(ids[2])
+		return []int{host, channel, target}, nil
+	}
+	return []int{}, err
+
+}
+
+func NewFibreChannelTarget() []FibreChannelTarget {
+	return (&FibreChannelTarget{parser: &PairParser{Delimiter: "\\n{3,}"}}).Parse()
 }
 
 // (Multipath) Subclass of Interface

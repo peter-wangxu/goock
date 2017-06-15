@@ -1,6 +1,9 @@
 package client
 
 import (
+	"github.com/peter-wangxu/goock/connector"
+	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/test"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -25,4 +28,13 @@ func TestHandleExtendEmpty(t *testing.T) {
 func TestHandleExtendLocal(t *testing.T) {
 	err := HandleExtend("/dev/sdm")
 	assert.Error(t, err)
+}
+
+func TestHandleInfo(t *testing.T) {
+	model.SetExecutor(test.NewMockExecutor())
+	connector.SetExecutor(test.NewMockExecutor())
+	HandleInfo()
+}
+func TestHandleInfoFailed(t *testing.T) {
+	HandleInfo()
 }

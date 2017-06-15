@@ -34,7 +34,7 @@ func GetFCHBA() []model.HBA {
 	return model.NewHBA()
 }
 
-func GetFCWWPN() []string {
+func GetFcWwpn() []string {
 	hbas := GetFCHBA()
 	wwpns := make([]string, len(hbas))
 	var index = 0
@@ -47,7 +47,7 @@ func GetFCWWPN() []string {
 	return wwpns
 }
 
-func GetFCWWNN() []string {
+func GetFcWwnn() []string {
 	hbas := GetFCHBA()
 	wwnns := make([]string, len(hbas))
 	var index = 0
@@ -60,11 +60,11 @@ func GetFCWWNN() []string {
 	return wwnns
 }
 
-func RescanHosts() {
-	hbas := GetFCHBA()
-	for _, hba := range hbas {
-		path := fmt.Sprintf("/sys/class/scsi_host/%s/scan", hba.Name)
-		ScanSCSIBus(path, "")
+// Do a more specific scan instead of a wildcard
+func RescanHosts(allHct [][]int, lunID int) {
+	for _, hct := range allHct {
+		path := fmt.Sprintf("/sys/class/scsi_host/host%d/scan", hct[0])
+		ScanSCSIBus(path, fmt.Sprintf("%d %d %d", hct[1], hct[2], lunID))
 	}
 }
 
