@@ -326,7 +326,7 @@ func (s *HBA) GetHostId() (int, error) {
 }
 
 func NewHBA() []HBA {
-	return (&HBA{parser: &PairParser{Delimiter: "\\n{3,}"}}).Parse()
+	return (&HBA{parser: &PairParser{Matcher: "Class Device ="}}).Parse()
 }
 
 // (FibreChannelTarget) Subclass of Interface
@@ -408,7 +408,7 @@ func (s *FibreChannelTarget) GetHostChannelTarget() ([]int, error) {
 }
 
 func NewFibreChannelTarget() []FibreChannelTarget {
-	return (&FibreChannelTarget{parser: &PairParser{Delimiter: "\\n{3,}"}}).Parse()
+	return (&FibreChannelTarget{parser: &PairParser{Matcher: "Class Device ="}}).Parse()
 }
 
 // (Multipath) Subclass of Interface
@@ -641,21 +641,29 @@ func NewDeviceInfo(path string) []DeviceInfo {
 	return rS.Parse()
 }
 
-// Split by regexp specified by delimiter
+// RegSplit splits by regexp specified by delimiter
 func RegSplit(text string, delimiter string) []string {
 	reg := regexp.MustCompile(delimiter)
 	indexes := reg.FindAllStringIndex(text, -1)
+
+	// No match
+	if len(indexes) == 0 {
+		return []string{}
+	}
+
+	if len(indexes) == 1 {
+		return []string{text[indexes[0][0]:]}
+	}
 	lastStart := 0
-	result := make([]string, len(indexes)+1)
-	for i, element := range indexes {
-		result[i] = text[lastStart:element[0]]
+	var result []string
+	for _, element := range indexes {
+		result = append(result, text[lastStart:element[0]])
 		lastStart = element[1]
 	}
-	result[len(indexes)] = text[lastStart:]
 	return result
 }
 
-// Return slices of the matched string
+// RegMatcher returns slices of string between adjacent matchers
 func RegMatcher(text string, matcher string) []string {
 	reg := regexp.MustCompile(matcher)
 
