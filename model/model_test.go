@@ -42,6 +42,10 @@ func TestNewHBA(t *testing.T) {
 	assert.Equal(t, "8 Gbit", hbas[0].Speed)
 	assert.Equal(t, "4 Gbit, 8 Gbit, 16 Gbit", hbas[0].SupportedSpeeds)
 	assert.Equal(t, "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.0/host7", hbas[0].DevicePath)
+
+	hostId1, err := hbas[1].GetHostId()
+	assert.Equal(t, "host9", hbas[1].Name)
+	assert.Equal(t, 9, hostId1)
 }
 
 func TestNewFibreChannelTarget(t *testing.T) {

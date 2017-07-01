@@ -677,11 +677,13 @@ func RegMatcher(text string, matcher string) []string {
 		return []string{text}
 	}
 
+	lastIndex := matchedIndex[0][0]
 	for j := 0; j < len(matchedIndex)-1; j++ {
-		m := text[matchedIndex[j][0]:matchedIndex[j+1][0]]
+		m := text[lastIndex:matchedIndex[j+1][0]]
 		result = append(result, m)
+		lastIndex = matchedIndex[j+1][0]
 	}
-	result = append(result, text[len(matchedIndex)-1:])
+	result = append(result, text[lastIndex:])
 	return result
 }
 

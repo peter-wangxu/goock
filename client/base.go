@@ -24,6 +24,9 @@ import (
 	"github.com/peter-wangxu/goock/util"
 	"github.com/sirupsen/logrus"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 var log *logrus.Logger = logrus.New()
@@ -75,7 +78,38 @@ func InitLog(debug bool) error {
 	return nil
 }
 
-// Handle the Extend request based the device type
+// HandleConnect dispatches the cli to iscsi/fc respectively.
+func HandleConnect(args ...string) error {
+	var err error
+	if len(args) <= 0 {
+		log.Error("Target IP or wwn is required.")
+		err = fmt.Errorf("Target IP or wwn is required.")
+	} else if len(args) == 1 {
+		// User only supply the LUN ID, so did a wildcard scan for all connected targets
+		err = fmt.Errorf("Currently [lun id] is not supported.")
+		log.WithError(err).Error("Unsupported parameters.")
+		log.Error("%s", args)
+	} else {
+		target := args[0]
+		// Make sure the last param is LUN ID.
+		if _, err = ValidateLunId(args[len(args)-1:]); err == nil {
+			if IsIpLike(target) {
+				return HandleISCSIConnect(args...)
+			}
+			if IsFcLike(target) {
+				return HandleFCConnect(args...)
+			}
+		}
+	}
+	return err
+}
+
+// HandleDisconnect dispatches the cli to iscsi/fc respectively.
+func HanddleDisconnect(args ...string) error {
+	return nil
+}
+
+// HandleExtend handles the Extend request based the device type
 func HandleExtend(args ...string) error {
 	var err error
 	if len(args) <= 0 {
@@ -96,7 +130,7 @@ func HandleInfo(args ...string) error {
 	if err == nil {
 		BeautifyHostInfo(hostInfo)
 	} else {
-		log.WithError(err).Warn("Unable to get host information, not privileged or tools not installed?")
+		log.WithError(err).Warn("Unable to get host information, permission denied or tools not installed?")
 	}
 	return err
 }
@@ -114,4 +148,55 @@ func BeautifyHostInfo(info connector.HostInfo) {
 		targetWwns = append(targetWwns, targetWwnns+":"+info.TargetWwpns[j])
 	}
 	fmt.Printf(HostInfoFormat, info.Initiator, wwns, targetWwns, "fakeIP")
+}
+
+func ValidateLunId(lunIDs []string) ([]int, error) {
+	var err error
+	re, _ := regexp.Compile("\\d+")
+	var ret []int
+	for _, lun := range lunIDs {
+		if re.MatchString(lun) == false {
+			err = fmt.Errorf("%s does not look like a LUN ID.", lun)
+			break
+		}
+		i, _ := strconv.Atoi(lun)
+		ret = append(ret, i)
+	}
+	if len(ret) <= 0 {
+		log.Warnf("No lun ID specified, correct and retry.")
+	}
+	return ret, err
+}
+
+// IsLunLike tests if *data* is a lun id.
+func IsLunLike(data string) bool {
+
+	if _, err := strconv.Atoi(data); err != nil {
+		return false
+	}
+	return true
+}
+
+// IsIpLike tests if *data* is a ipv4 address.
+func IsIpLike(data string) bool {
+	// IPv4 match
+	if m, _ := regexp.MatchString("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$", data); !m {
+		return false
+	}
+	return true
+}
+
+// IsFcLike tests if *data* is a fc wwn.
+func IsFcLike(data string) bool {
+	// Replace the colons if presents
+	data = strings.Replace(data, ":", "", -1)
+	// Matches the wwpn
+	if m, _ := regexp.MatchString("^\\w{16}$", data); m == true {
+		return true
+	}
+	// Matches the wwnn + wwpn
+	if m, _ := regexp.MatchString("^\\w{32}$", data); m == true {
+		return true
+	}
+	return false
 }
