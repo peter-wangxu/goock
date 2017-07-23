@@ -28,9 +28,41 @@ func TestNewHBA(t *testing.T) {
 		executor = old
 	}()
 	hbas := NewHBA()
-	assert.Equal(t, "host7", hbas[0].Name)
-	assert.Equal(t, "0x10000090fa534cd0", hbas[0].PortName)
+
 	assert.Equal(t, 2, len(hbas))
+	assert.Equal(t, "host7", hbas[0].Name)
+	hostId, err := hbas[0].GetHostId()
+	assert.Nil(t, err)
+	assert.Equal(t, 7, hostId)
+	assert.Equal(t, "", hbas[0].Path)
+	assert.Equal(t, "100050eb1a033f59", hbas[0].FabricName)
+	assert.Equal(t, "20000090fa534cd0", hbas[0].NodeName)
+	assert.Equal(t, "10000090fa534cd0", hbas[0].PortName)
+	assert.Equal(t, "Online", hbas[0].PortState)
+	assert.Equal(t, "8 Gbit", hbas[0].Speed)
+	assert.Equal(t, "4 Gbit, 8 Gbit, 16 Gbit", hbas[0].SupportedSpeeds)
+	assert.Equal(t, "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.0/host7", hbas[0].DevicePath)
+
+	hostId1, err := hbas[1].GetHostId()
+	assert.Equal(t, "host9", hbas[1].Name)
+	assert.Equal(t, 9, hostId1)
+}
+
+func TestNewFibreChannelTarget(t *testing.T) {
+	executor = test.NewMockExecutor()
+
+	targets := NewFibreChannelTarget()
+	assert.Len(t, targets, 4)
+	assert.Equal(t, "0:0", targets[0].ClassDevice)
+	assert.Equal(t, "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-2/target9:0:0/fc_transport/target9:0:0", targets[0].ClassDevicePath)
+	assert.Equal(t, "0x020500", targets[0].PortId)
+	assert.Equal(t, "5006016089200925", targets[0].NodeName)
+	assert.Equal(t, "5006016d09200925", targets[0].PortName)
+	assert.Equal(t, "target9:0:0", targets[0].Device)
+	assert.Equal(t, "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-2/target9:0:0", targets[0].DevicePath)
+	hcl, err := targets[0].GetHostChannelTarget()
+	assert.Nil(t, err)
+	assert.EqualValues(t, []int{9, 0, 0}, hcl)
 }
 
 func TestNewISCSISession(t *testing.T) {
@@ -116,13 +148,18 @@ func TestNewDeviceInfo(t *testing.T) {
 	assert.Equal(t, "0:1:0:0", devices[0].GetDeviceIdentifier())
 }
 func TestRegSplit(t *testing.T) {
-	var s = `|-+- policy='round-robin 0' prio=50 status=active
-		 | -- 9:0:0:10   sdm  8:192   active ready  running
-		  --+- policy='round-robin 0' prio=10 status=enabled
-	  	 |- 9:0:2:10   sdap 66:144  active ready  running
-	         -- 13:0:0:10  sdcd 69:16   active ready  running`
-	ret := RegSplit(s, "\\|-\\+-")
+	var s = `aaa|bbb|ccc`
+	ret := RegSplit(s, "\\|")
 	assert.Len(t, ret, 2)
+	assert.Equal(t, "aaa", ret[0])
+	assert.Equal(t, "bbb", ret[1])
+}
+
+func TestRegSplitNoMatched(t *testing.T) {
+	var s = `Error opening class fc_transport
+`
+	ret := RegSplit(s, "\\n{3}")
+	assert.Len(t, ret, 0)
 }
 
 func TestRegMatcher(t *testing.T) {
@@ -151,4 +188,6 @@ size=2.0G features='2 queue_if_no_path retain_attached_hw_handler' hwhandler='1 
 	matched := RegMatcher(s, "\\w{33}")
 	assert.Equal(t, 3, len(matched))
 	assert.Contains(t, matched[0], "36006016074e03a003dbe2a580510610a")
+	assert.Contains(t, matched[1], "3600601601290380036a00936cf13e711")
+	assert.Contains(t, matched[2], "36006016074e03a008dfd94ce623d4c0e")
 }

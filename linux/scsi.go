@@ -81,16 +81,11 @@ func GetDeviceSize(path string) int {
 
 // use echo "c t l" > to /sys/class/scsi_host/%s/scan
 func ScanSCSIBus(path string, content string) error {
-	if content == "" {
-		// "hba_channel target_id target_lun"
-		content = "- - -"
-	}
 	cmd := executor.Command("tee", "-a", path)
 	cmd.SetStdin(strings.NewReader(content))
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		log.WithError(err).Warn("Rescan Bus failed")
-
 	}
 	return err
 
@@ -109,10 +104,8 @@ func RemoveSCSIDevice(path string) {
 	}
 
 	path = fmt.Sprintf("/sys/block/%s/device/delete", path)
-	cmd := executor.Command("tee", "-a", path)
-	cmd.SetStdin(strings.NewReader("1"))
-	out, _ := cmd.CombinedOutput()
-	log.Debugf("Remove device [%s] with output : [%s]", path, out)
+	ScanSCSIBus(path, "1")
+	log.Debugf("Removed device [%s].", path)
 }
 
 // path = "/dev/sdb" or "
@@ -140,14 +133,11 @@ func ExtendDevice(path string) (int, error) {
 		"original": deviceSize,
 	}).Debug("Begin to extend the device.")
 
-	cmd := executor.Command("tee", "-a", rescanPath)
-	cmd.SetStdin(strings.NewReader("1"))
-	out, err := cmd.CombinedOutput()
+	ScanSCSIBus(rescanPath, "1")
 	newSize := GetDeviceSize(path)
 	log.WithFields(logrus.Fields{
 		"path":    path,
 		"newSize": newSize,
-		"output":  out,
 	}).Info("Extend device finished.")
 	return newSize, err
 }
@@ -162,10 +152,4 @@ func GetDeviceInfo(path string) (model.DeviceInfo, error) {
 		return model.DeviceInfo{}, fmt.Errorf("Unable to get device info.")
 	}
 	return devices[0], nil
-}
-
-// TODO Add the commands here
-// Force the scsi bus to rescan the size/any attribute for the device
-func RescanDevice(path string) {
-
 }

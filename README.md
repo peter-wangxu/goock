@@ -1,9 +1,10 @@
 # Goock
 
-[![CircleCI](https://img.shields.io/circleci/project/github/peter-wangxu/goock/master.svg?style=plastic)]()
-[![Codecov](https://img.shields.io/codecov/c/github/peter-wangxu/goock/master.svg?style=plastic)]()
+[![Go Report Card](https://goreportcard.com/badge/github.com/peter-wangxu/goock)](https://goreportcard.com/report/github.com/peter-wangxu/goock)
+[![CircleCI](https://img.shields.io/circleci/project/github/peter-wangxu/goock/master.svg?style=flat-square)](https://circleci.com/gh/peter-wangxu/goock)
+[![Codecov](https://img.shields.io/codecov/c/github/peter-wangxu/goock/master.svg?style=flat-square)](https://codecov.io/gh/peter-wangxu/goock)
 
-Goock is a `Go` library/client for discovering and managing block device. it dramatically eases the
+Goock is a `Golang` library/client for discovering and managing block device. it dramatically eases the
 efforts needed when connecting/disconnecting to storage backend.
 
 ## Table of Content
@@ -22,7 +23,7 @@ efforts needed when connecting/disconnecting to storage backend.
         * [Connect and rescan all LUNs from a target](#connect-and-rescan-all-luns-from-a-target)
         * [Disconnect a device from remote system](#disconnect-a-lun-from-storage-system)
         * [Extend a connected device](#extend-a-connected-device)
-        * [Get help](#get-help)
+        * [Get command help](#get-help-of-each-command)
 * [Testing](#testing)
     * [Unit test](#unit-test)
     * [Manual test](#manual-test)
@@ -53,17 +54,22 @@ This project is inspired by OpenStack project
 
 Note: if you want build binary from source, please firstly [setup Go environment](https://golang.org/doc/).
 
-- Download the source and it's dependencies from github
+- Get the binary of goock, you have 2 ways to do this:
 
-```
-go get -d -v -t github.com/peter-wangxu/goock
-```
-- Build the binary
+    * Download the binary of goock from [goock releases](https://github.com/peter-wangxu/goock/releases)
 
-```bash
-go build
-```
-a binary file named `goock` will be in place for use.
+    * Either:
+        - download the source and it's dependencies from github
+    
+        ```
+        go get -d -v -t github.com/peter-wangxu/goock
+        ```
+        - Build the binary
+        
+        ```bash
+        go build
+        ```
+        a binary file named `goock` will be in place for use.
 
 - Install tools
 
@@ -78,7 +84,7 @@ On RHEL/CentOS
 ```bash
 yum install iscsi-initiator-utils device-mapper-multipath sysfsutils sg3_utils
 ```
-## Requirements
+## Development requirements
 
 Goock can be built or developed on both Linux or Windows platform.
 
@@ -132,8 +138,7 @@ deviceInfo, _ : = iscsi.DisconnectVolume(conn)
 
 #### Extend a already connected device
 
-Sometimes, the device can be extend on the storage system, while the device size
-is not awared from the host side, in this case, a host side rescan is needed.
+Sometimes, the device needs be extended on the storage system, while host was not aware of size change immediately, in this case, a host side rescan is needed.
 
 ```go
 package main
@@ -169,39 +174,62 @@ Example usage below:
 ```bash
 goock -v
 ```
+#### Get host information
 
+```bash
+goock info
+```
+the output likes below:
+```bash
+Volume Information:
+iSCSI Qualified Name(IQN)      :
+iqn.1993-08.org.debian:01:b974ee37fea
+Host Bus Adapter               :
+[20000090fa534cd0:10000090fa534cd0 20000090fa534cd1:10000090fa534cd1]
+Connected Fibre Channel Target :
+[5006016089200925:5006016d09200925 50060160b6e00e5a:5006016036e00e5a 5006016089200925:5006016509200925 50060160b6e00e5a:5006016136e00e5a]
+Connected iSCSI sessions       :
+192.168.1.99 192.168.1.100
+```
 #### Connect to a LUN on specific target
 
 ```bash
 # Connect and rescan storage device whose iSCSI target ip is <target IP>, the desired
 # Device LUN ID is [LUN ID]
-goock connect <target IP> [LUN ID]
-
+goock connect <TARGET> <LUN ID>
 ```
+
+> The `<TARGET>` here and below commands example denotes the IP address or WWN of remote
+storage device.
+
+> The `<LUN ID>` is allocated by the storage array, usually a integer less than 255.
+
 #### Connect and rescan all LUNs from a target
 
+*Not support yet.*
 ```bash
-goock connect <target IP>
+goock connect <TARGET>
 ```
 
 #### Disconnect a LUN from storage system
  
  ```bash
- goock disconnect <Target IP> <LUN ID>
+ goock disconnect <Target> <LUN ID>
  ```
 
 #### Extend a connected device
 
 ```bash
-goock extend <Target IP> <LUN ID>
+goock extend <Target> <LUN ID>
 ```
 or
 
+*Not support yet.*
 ```bash
 goock extend /dev/sdx
 ```
 
-#### Get help
+#### Get help for each command
 
 ```bash
 goock help connect
@@ -224,7 +252,7 @@ go build
 ```
 * run `goock` command by specifying some parameters
 ```bash
-goock connect <target IP>
+goock connect <TARGET> <LUN ID>
 ```
 
 

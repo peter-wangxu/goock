@@ -35,21 +35,20 @@ func TestGetFCHBA(t *testing.T) {
 
 func TestGetFCWWPN(t *testing.T) {
 	model.SetExecutor(test.NewMockExecutor())
-	wwpns := GetFCWWPN()
+	wwpns := GetFcWwpn()
 	assert.Len(t, wwpns, 2)
 	assert.Equal(t, "10000090fa534cd0", wwpns[0])
 }
 func TestGetFCWWNN(t *testing.T) {
 	model.SetExecutor(test.NewMockExecutor())
-	wwnns := GetFCWWNN()
+	wwnns := GetFcWwnn()
 	assert.Len(t, wwnns, 2)
 	assert.Equal(t, "20000090fa534cd0", wwnns[0])
 }
 
 func TestRescanHosts(t *testing.T) {
-	model.SetExecutor(test.NewMockExecutor())
 	SetExecutor(test.NewMockExecutor())
-	RescanHosts()
+	RescanHosts([][]int{{9, 0, 1}, {7, 1, 0}}, 10)
 }
 
 func TestIsFCDeviceTrue(t *testing.T) {

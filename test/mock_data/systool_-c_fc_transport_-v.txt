@@ -1,0 +1,50 @@
+0
+Class = "fc_transport"
+
+  Class Device = "0:0"
+  Class Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-2/target9:0:0/fc_transport/target9:0:0"
+    node_name           = "0x5006016089200925"
+    port_id             = "0x020500"
+    port_name           = "0x5006016d09200925"
+    uevent              =
+
+    Device = "target9:0:0"
+    Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-2/target9:0:0"
+      uevent              = "DEVTYPE=scsi_target"
+
+
+  Class Device = "0:1"
+  Class Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-3/target9:0:1/fc_transport/target9:0:1"
+    node_name           = "0x50060160b6e00e5a"
+    port_id             = "0x020400"
+    port_name           = "0x5006016036e00e5a"
+    uevent              =
+
+    Device = "target9:0:1"
+    Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-3/target9:0:1"
+      uevent              = "DEVTYPE=scsi_target"
+
+
+  Class Device = "0:2"
+  Class Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-4/target9:0:2/fc_transport/target9:0:2"
+    node_name           = "0x5006016089200925"
+    port_id             = "0x020200"
+    port_name           = "0x5006016509200925"
+    uevent              =
+
+    Device = "target9:0:2"
+    Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-4/target9:0:2"
+      uevent              = "DEVTYPE=scsi_target"
+
+
+  Class Device = "0:3"
+  Class Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-5/target9:0:3/fc_transport/target9:0:3"
+    node_name           = "0x50060160b6e00e5a"
+    port_id             = "0x020000"
+    port_name           = "0x5006016136e00e5a"
+    uevent              =
+
+    Device = "target9:0:3"
+    Device path = "/sys/devices/pci0000:00/0000:00:03.0/0000:05:00.1/host9/rport-9:0-5/target9:0:3"
+      uevent              = "DEVTYPE=scsi_target"
+

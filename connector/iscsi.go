@@ -22,31 +22,22 @@ import (
 	"github.com/peter-wangxu/goock/linux"
 	"github.com/peter-wangxu/goock/model"
 	goockutil "github.com/peter-wangxu/goock/util"
-	"os"
 	"path/filepath"
-	"regexp"
-	"runtime"
 )
 
-var executor = exec.New()
-
 const (
-	ISCSIPathPattern = "/dev/disk/by-path/ip-%s-iscsi-%s-lun-%d"
+	ISCSIPathPattern = "/dev/disk/by-path/ip-%s-iscsi-%s-lun-%s"
 )
 
 type OPERATION_ENUM StringEnum
 
 const (
-	OPERATION_NEW            OPERATION_ENUM = "new"
-	OPERATION_DELETE         OPERATION_ENUM = "new"
-	OPERATION_UPDATE         OPERATION_ENUM = "update"
-	OPERATION_SHOW           OPERATION_ENUM = "show"
-	OPERATION_NON_PERSISTENT OPERATION_ENUM = "nonpersistent"
+	OperationNew           OPERATION_ENUM = "new"
+	OperationDelete        OPERATION_ENUM = "new"
+	OperationUpdate        OPERATION_ENUM = "update"
+	OperationShow          OPERATION_ENUM = "show"
+	OperationNonPersistent OPERATION_ENUM = "nonpersistent"
 )
-
-func SetExecutor(e exec.Interface) {
-	executor = e
-}
 
 type ISCSIConnector struct {
 	exec exec.Interface
@@ -56,27 +47,8 @@ func NewISCSIConnector() ISCSIInterface {
 	return &ISCSIConnector{exec: executor}
 }
 
-func (iscsi *ISCSIConnector) GetHostInfo(args []string) (HostInfo, error) {
-	filePath := "/etc/iscsi/initiatorname.iscsi"
-	cmd := iscsi.exec.Command("cat", filePath)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		// Log waring
-		log.WithError(err).Debugf("Unable to fetch iscsi iqn under %s, iscsi is not installed?", filePath)
-		return HostInfo{}, err
-	}
-	var info HostInfo
-	pattern, err := regexp.Compile("InitiatorName=(?P<name>.*)\n$")
-	matches := pattern.FindStringSubmatch(string(out))
-	if len(matches) >= 2 {
-		info.Initiator = matches[1]
-	}
-	osName := runtime.GOOS
-	hostName, _ := os.Hostname()
-	info.OSType = osName
-	info.Hostname = hostName
-	return info, err
-
+func (iscsi *ISCSIConnector) GetHostInfo() (HostInfo, error) {
+	return GetHostInfo()
 }
 
 func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
@@ -92,7 +64,7 @@ func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
 func (iscsi *ISCSIConnector) getVolumePaths(connectionProperty ConnectionProperty) []string {
 	target_iqns := connectionProperty.TargetIqns
 	target_portals := connectionProperty.TargetPortals
-	target_luns := connectionProperty.TargetLuns
+	target_luns := FormatLuns(connectionProperty.TargetLuns...)
 	var potential_paths []string
 	for i, iqn := range target_iqns {
 		path := fmt.Sprintf(ISCSIPathPattern, target_portals[i], iqn, target_luns[i])
@@ -141,7 +113,7 @@ func (iscsi *ISCSIConnector) LoginPortal(targetPortal string, targetIqn string) 
 // Set the node to 'node.startup = automatic', it will login the portal
 // automatically after reboot
 func (iscsi *ISCSIConnector) SetNode2Auto(targetPortal string, targetIqn string) error {
-	operations := iscsi.composeISCSIOperation(targetPortal, targetIqn, OPERATION_UPDATE, "node.startup", "automatic")
+	operations := iscsi.composeISCSIOperation(targetPortal, targetIqn, OperationUpdate, "node.startup", "automatic")
 	_, err := iscsi.exec.Command("iscsiadm", operations...).CombinedOutput()
 	return err
 }
@@ -222,12 +194,13 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 	iscsi.rescanISCSI()
 	info := VolumeInfo{}
 	possiblePaths := iscsi.getVolumePaths(connectionProperty)
-	accessiblePath, err := goockutil.WaitForAnyPath(possiblePaths)
+	accessiblePath, err := goockutil.WaitForAnyPath(possiblePaths, nil)
 	if err != nil {
 		log.WithError(err).Errorf("Unable to find any existing path within %s", possiblePaths)
 		return info, err
 	}
 	wwn := linux.GetWWN(accessiblePath)
+	log.Debugf("Found wwn [%s] for path %s.", wwn, accessiblePath)
 	if linux.IsMultipathEnabled() == true {
 		// for multipath, returns the multipath descriptor
 		log.Info("Multipath discovery for iSCSI enabled.")
@@ -236,7 +209,7 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 		info.MultipathId = wwn
 		info.Multipath = mPath
 		info.Paths, _ = goockutil.FilterPath(possiblePaths)
-		if connectionProperty.AccessMode == READWRITE {
+		if connectionProperty.AccessMode == ReadWrite {
 			log.Debugf("Checking to see if multipath %s is writable.", mPath)
 			linux.CheckReadWrite(accessiblePath, wwn)
 		}

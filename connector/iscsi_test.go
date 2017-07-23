@@ -28,7 +28,7 @@ import (
 func TestISCSIConnector_GetHostInfo(t *testing.T) {
 	SetExecutor(test.NewMockExecutor())
 	iscsi := NewISCSIConnector()
-	props, err := iscsi.GetHostInfo([]string{})
+	props, err := iscsi.GetHostInfo()
 	assert.Nil(t, err)
 	assert.Equal(t, "iqn.1993-08.org.debian:01:b974ee37fea", props.Initiator)
 	assert.Contains(t, []string{"windows", "linux", "macOS"}, props.OSType)
@@ -91,13 +91,13 @@ func TestISCSIConnector_ConnectVolume_NotAll(t *testing.T) {
 		11,
 		11,
 	}
-	device, err := iscsi.ConnectVolume(fakeProperty)
+	info, err := iscsi.ConnectVolume(fakeProperty)
 	assert.Nil(t, err)
-	assert.Len(t, device.Paths, 1)
-	assert.NotEmpty(t, device.Wwn)
-	assert.Equal(t, fmt.Sprintf("/dev/disk/by-id/dm-uuid-mpath-%s", device.Wwn), device.Multipath)
-	//assert.Equal(t, "/dev/disk/by-path/ip-192.168.3.50:3260-iscsi-iqn.1992-04.com.emc:cx.apm00152904558.b12-lun-11", device.Paths[0])
-	assert.Equal(t, "/dev/disk/by-path/ip-192.168.3.49:3260-iscsi-iqn.1992-04.com.emc:cx.apm00152904558.a12-lun-11", device.Paths[0])
+	assert.Len(t, info.Paths, 1)
+	assert.NotEmpty(t, info.Wwn)
+	assert.Equal(t, fmt.Sprintf("/dev/disk/by-id/dm-uuid-mpath-%s", info.Wwn), info.Multipath)
+	//assert.Equal(t, "/dev/disk/by-path/ip-192.168.3.50:3260-iscsi-iqn.1992-04.com.emc:cx.apm00152904558.b12-lun-11", info.Paths[0])
+	assert.Equal(t, "/dev/disk/by-path/ip-192.168.3.49:3260-iscsi-iqn.1992-04.com.emc:cx.apm00152904558.a12-lun-11", info.Paths[0])
 }
 
 func TestISCSIConnector_ConnectVolumeNoMultipath(t *testing.T) {

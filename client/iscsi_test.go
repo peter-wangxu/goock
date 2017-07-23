@@ -11,7 +11,7 @@ import (
 type FakeISCSIConnector struct {
 }
 
-func (fake *FakeISCSIConnector) GetHostInfo(args []string) (connector.HostInfo, error) {
+func (fake *FakeISCSIConnector) GetHostInfo() (connector.HostInfo, error) {
 	return connector.HostInfo{}, nil
 }
 
@@ -101,20 +101,6 @@ func TestHandleIscsiInvalidLun(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestHandleIscsiNoParam(t *testing.T) {
-	fake := &FakeISCSIConnector{}
-	SetISCSIConnector(fake)
-	err := HandleISCSIConnect()
-	assert.Error(t, err)
-}
-
-func TestHandleISCSIDisconnectNoParam(t *testing.T) {
-	fake := &FakeISCSIConnector{}
-	SetISCSIConnector(fake)
-	err := HandleISCSIDisconnect()
-	assert.Error(t, err, "Need device name or Target IP with LUN ID.")
-}
-
 func TestHandleISCSIDisconnect(t *testing.T) {
 	fake := &FakeISCSIConnector{}
 	SetISCSIConnector(fake)
@@ -141,10 +127,4 @@ func TestBeautifyVolumeInfo(t *testing.T) {
 		MultipathId: "351160160b6e00e5a50060160b6e00e5a", Wwn: "351160160b6e00e5a50060160b6e00e5a",
 		Multipath: "/dev/mapper/351160160b6e00e5a50060160b6e00e5a"}
 	BeautifyVolumeInfo(info)
-}
-
-func TestValidateLunId(t *testing.T) {
-	lunids, err := ValidateLunId([]string{"a", "b"})
-	assert.Error(t, err)
-	assert.Len(t, lunids, 0)
 }
