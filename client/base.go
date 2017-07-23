@@ -39,7 +39,7 @@ Multipath ID : %s
 WWN          : %s
 `
 
-var HostInfoFormat = `Volume Information:
+var HostInfoFormat = `Host Information:
 iSCSI Qualified Name(IQN)      :
 %s
 Host Bus Adapter               :
@@ -147,7 +147,12 @@ func BeautifyHostInfo(info connector.HostInfo) {
 	for j, targetWwnns := range info.TargetWwnns {
 		targetWwns = append(targetWwns, targetWwnns+":"+info.TargetWwpns[j])
 	}
-	fmt.Printf(HostInfoFormat, info.Initiator, wwns, targetWwns, "fakeIP")
+
+	iscsiTargets := ""
+	for i, target := range info.TargetPortals {
+		iscsiTargets += fmt.Sprintf("%s,%s\n", target, info.TargetIqns[i])
+	}
+	fmt.Printf(HostInfoFormat, info.Initiator, wwns, targetWwns, iscsiTargets)
 }
 
 func ValidateLunId(lunIDs []string) ([]int, error) {

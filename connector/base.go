@@ -84,9 +84,12 @@ type HostInfo struct {
 	TargetWwnns []string
 	// TargetWwpns: the port name of connected targets
 	TargetWwpns []string
-	Ip          string
-	Hostname    string
-	OSType      string
+	// Connected target portals
+	TargetPortals []string
+	TargetIqns    []string
+	Ip            string
+	Hostname      string
+	OSType        string
 }
 
 type VolumeInfo struct {
@@ -163,7 +166,7 @@ func GetHostInfo() (HostInfo, error) {
 			info.Initiator = matches[1]
 		}
 	} else {
-		log.WithError(err).Debugf("Unable to fetch iscsi iqn under %s, permission denied or iscsi is not installed?", filePath)
+		log.WithError(err).Debugf("Unable to fetch iscsi iqn under %s, permission denied or open-iscsi is not installed?", filePath)
 	}
 	info.OSType = runtime.GOOS
 	info.Hostname, _ = os.Hostname()
@@ -176,6 +179,12 @@ func GetHostInfo() (HostInfo, error) {
 	for _, target := range targets {
 		info.TargetWwnns = append(info.TargetWwnns, target.NodeName)
 		info.TargetWwpns = append(info.TargetWwpns, target.PortName)
+	}
+
+	sessions := model.NewISCSISession()
+	for _, session := range sessions {
+		info.TargetPortals = append(info.TargetPortals, session.TargetPortal)
+		info.TargetIqns = append(info.TargetIqns, session.TargetIqn)
 	}
 
 	return info, err
