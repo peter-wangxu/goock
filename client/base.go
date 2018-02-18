@@ -17,16 +17,17 @@ package client
 
 import (
 	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/peter-wangxu/goock/connector"
 	"github.com/peter-wangxu/goock/exec"
 	"github.com/peter-wangxu/goock/linux"
 	"github.com/peter-wangxu/goock/model"
 	"github.com/peter-wangxu/goock/util"
 	"github.com/sirupsen/logrus"
-	"os"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 var log *logrus.Logger = logrus.New()
@@ -62,7 +63,7 @@ func InitLog(debug bool) error {
 
 		// Only log the warning severity or above.
 		log.Level = logrus.DebugLevel
-		log.Formatter = &logrus.TextFormatter{}
+		log.Formatter = &logrus.TextFormatter{DisableColors: true}
 
 	} else {
 		log = logrus.New()

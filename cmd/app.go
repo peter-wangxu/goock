@@ -67,6 +67,11 @@ func NewApp() *App {
 				return client.HandleConnect(c.Args()...)
 			},
 			ArgsUsage: `<target ip>|<wwn> <lun id>`,
+			Description: `# Connect a device via iSCSI IP and LUN ID
+   goock disconnect 192.168.1.200 25
+   # Connect a device via WWn and LUN ID
+   goock disconnect 5006016d09200925 25
+`,
 		},
 		{
 			Name:    "disconnect",
@@ -77,6 +82,16 @@ func NewApp() *App {
 				client.InitLog(enableDebug)
 				return client.HandleISCSIDisconnect(c.Args()...)
 			},
+			ArgsUsage: `[<device path|device name>|<target ip|wwn> <lun id>]`,
+			Description: `# Disconnect a device via local device path
+   goock disconnect /dev/sdb
+   # Disconnect a device via device alias
+   goock disconnect sdb
+   Disconnect a device via iSCSI IP and LUN ID
+   goock disconnect 192.168.1.200 25
+   # Disconnect a device via WWn and LUN ID
+   goock disconnect 5006016d09200925 25
+`,
 		},
 		{
 			Name:    "extend",
@@ -87,16 +102,32 @@ func NewApp() *App {
 				client.InitLog(enableDebug)
 				return client.HandleExtend(c.Args()...)
 			},
+			Description: `# Extend a device via local device path
+   goock extend /dev/sdb
+   # Extend a device via device alias
+   goock extend sdb
+   # Extend a device via iSCSI IP and LUN ID
+   goock extend 192.168.1.200 25
+   # Extend a device via WWn and LUN ID
+   goock extend 5006016d09200925 25
+`,
 		},
 		{
 			Name:    "info",
 			Aliases: []string{"i"},
-			Usage:   "Query information for the specified target IP or LUNs.",
+			Usage:   "Query information for host or LUNs",
 			Action: func(c *cli.Context) error {
 				// Enable debug log from console
 				client.InitLog(enableDebug)
 				return client.HandleInfo(c.Args()...)
 			},
+			Description: `# Query host information about iSCSI or FC
+   goock info
+   # Query LUN information by iSCSI
+   goock info lun 192.168.1.200 25
+   # Query LUN information by FC
+   goock info lun 5006016d09200925 25
+`,
 		},
 	}
 	return &App{app}
