@@ -18,9 +18,9 @@ package client
 
 import (
 	"fmt"
+
 	"github.com/peter-wangxu/goock/connector"
 	"github.com/peter-wangxu/goock/model"
-	"strings"
 )
 
 var iscsiConnector = connector.NewISCSIConnector()
@@ -126,11 +126,10 @@ func FetchVolumeInfo(sessions []model.ISCSISession, lun int) (connector.VolumeIn
 }
 
 func BeautifyVolumeInfo(info connector.VolumeInfo) {
-	var beautifiedPaths []string
+	beautifiedPaths := ""
 	for _, path := range info.Paths {
-		path = "  [*] " + path
-		beautifiedPaths = append(beautifiedPaths, path)
+		beautifiedPaths += fmt.Sprintf("  %s\n", path)
 	}
-	fmt.Printf(fmt.Sprintf(VolumeFormat, info.Multipath, strings.Join(beautifiedPaths, "\n"),
+	fmt.Printf(fmt.Sprintf(VolumeFormat, info.Multipath, beautifiedPaths,
 		info.MultipathId, info.Wwn))
 }

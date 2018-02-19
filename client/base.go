@@ -33,21 +33,22 @@ import (
 var log *logrus.Logger = logrus.New()
 
 var VolumeFormat = `Volume Information:
-Multipath    : %s
-Single paths :
+Multipath:       %s
+Single Paths:
 %s
-Multipath ID : %s
-WWN          : %s
+Multipath ID:    %s
+WWN:             %s
 `
 
-var HostInfoFormat = `Host Information:
-iSCSI Qualified Name(IQN)      :
+var HostInfoFormat = `
+Host Name(FQDN):              %s
+iSCSI Qualified Name(IQN):
 %s
-Host Bus Adapter               :
+Host Bus Adapters:
 %s
-Connected Fibre Channel Target :
+Connected Fibre Channel Targets:
 %s
-Connected iSCSI sessions       :
+Connected iSCSI Sessions:
 %s
 `
 
@@ -63,7 +64,7 @@ func InitLog(debug bool) error {
 
 		// Only log the warning severity or above.
 		log.Level = logrus.DebugLevel
-		log.Formatter = &logrus.TextFormatter{DisableColors: true}
+		log.Formatter = &logrus.TextFormatter{}
 
 	} else {
 		log = logrus.New()
@@ -106,7 +107,7 @@ func HandleConnect(args ...string) error {
 }
 
 // HandleDisconnect dispatches the cli to iscsi/fc respectively.
-func HanddleDisconnect(args ...string) error {
+func HandleDisconnect(args ...string) error {
 	return nil
 }
 
@@ -138,22 +139,21 @@ func HandleInfo(args ...string) error {
 
 // BeautifyHostInfo prints the output to console
 func BeautifyHostInfo(info connector.HostInfo) {
-	var wwns []string
-	var targetWwns []string
-
+	// Local wwns of HBAs
+	sWwns := ""
 	for i, wwnns := range info.Wwnns {
-		wwns = append(wwns, wwnns+":"+info.Wwpns[i])
+		sWwns += fmt.Sprintf("  %s:%s\n", wwnns, info.Wwpns[i])
 	}
-
+	sTargetWwns := ""
 	for j, targetWwnns := range info.TargetWwnns {
-		targetWwns = append(targetWwns, targetWwnns+":"+info.TargetWwpns[j])
+		sTargetWwns += fmt.Sprintf("  %s:%s\n", targetWwnns, info.TargetWwpns[j])
 	}
 
-	iscsiTargets := ""
+	sIscsiTargets := ""
 	for i, target := range info.TargetPortals {
-		iscsiTargets += fmt.Sprintf("%s,%s\n", target, info.TargetIqns[i])
+		sIscsiTargets += fmt.Sprintf("  %s,%s\n", target, info.TargetIqns[i])
 	}
-	fmt.Printf(HostInfoFormat, info.Initiator, wwns, targetWwns, iscsiTargets)
+	fmt.Printf(HostInfoFormat, info.Hostname, info.Initiator, sWwns, sTargetWwns, sIscsiTargets)
 }
 
 func ValidateLunId(lunIDs []string) ([]int, error) {

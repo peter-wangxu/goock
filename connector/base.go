@@ -18,12 +18,13 @@ package connector
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/exec"
-	"github.com/peter-wangxu/goock/model"
-	"github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"runtime"
+
+	"github.com/peter-wangxu/goock/exec"
+	"github.com/peter-wangxu/goock/model"
+	"github.com/sirupsen/logrus"
 )
 
 type StringEnum string
@@ -167,6 +168,7 @@ func GetHostInfo() (HostInfo, error) {
 		}
 	} else {
 		log.WithError(err).Debugf("Unable to fetch iscsi iqn under %s, permission denied or open-iscsi is not installed?", filePath)
+		err = nil // Reset to nil as it's not critical
 	}
 	info.OSType = runtime.GOOS
 	info.Hostname, _ = os.Hostname()

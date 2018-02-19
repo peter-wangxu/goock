@@ -47,10 +47,12 @@ func NewISCSIConnector() ISCSIInterface {
 	return &ISCSIConnector{exec: executor}
 }
 
+// Returns host information regarding iSCSI and FC
 func (iscsi *ISCSIConnector) GetHostInfo() (HostInfo, error) {
 	return GetHostInfo()
 }
 
+// Get all logged-in sessions
 func (iscsi *ISCSIConnector) getIscsiSessions() []model.ISCSISession {
 	// parse the output from iscsiadm
 	// lines are in the format of
