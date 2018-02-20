@@ -41,9 +41,8 @@ WWN:             %s
 `
 
 var HostInfoFormat = `
-Host Name(FQDN):              %s
-iSCSI Qualified Name(IQN):
-%s
+Host Name(FQDN):                    %s
+iSCSI Qualified Name(IQN):          %s
 Host Bus Adapters:
 %s
 Connected Fibre Channel Targets:

@@ -18,11 +18,11 @@ package exec
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
 	osexec "os/exec"
 	"syscall"
 	"time"
+	"github.com/sirupsen/logrus"
 )
 
 var log *logrus.Logger = logrus.New()
@@ -119,6 +119,7 @@ func (cmd *cmdWrapper) Output() ([]byte, error) {
 }
 
 func executeCmd(cmd *cmdWrapper, combined bool) ([]byte, error) {
+	log.Debug("Executing command: ", cmd.Args)
 	start := time.Now()
 	var err error
 	var out []byte

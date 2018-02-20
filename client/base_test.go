@@ -6,7 +6,7 @@ import (
 	"github.com/peter-wangxu/goock/connector"
 	"github.com/peter-wangxu/goock/exec"
 	"github.com/peter-wangxu/goock/model"
-	//	"github.com/peter-wangxu/goock/test"
+	"github.com/peter-wangxu/goock/test"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,8 +33,8 @@ func TestHandleExtendLocal(t *testing.T) {
 }
 
 func TestHandleInfo(t *testing.T) {
-	//	model.SetExecutor(test.NewMockExecutor())
-	//	connector.SetExecutor(test.NewMockExecutor())
+	model.SetExecutor(test.NewMockExecutor())
+	connector.SetExecutor(test.NewMockExecutor())
 	err := HandleInfo()
 	assert.Nil(t, err)
 }
@@ -42,7 +42,7 @@ func TestHandleInfoFailed(t *testing.T) {
 	model.SetExecutor(exec.New())
 	connector.SetExecutor(exec.New())
 	err := HandleInfo()
-	assert.Nil(t, err)
+	assert.Error(t, err)
 }
 func TestValidateLunId_True(t *testing.T) {
 	lunids, err := ValidateLunId([]string{"12", "113"})
