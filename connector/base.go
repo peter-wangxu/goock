@@ -158,7 +158,7 @@ func GetHostInfo() (HostInfo, error) {
 
 	filePath := "/etc/iscsi/initiatorname.iscsi"
 	cmd := executor.Command("cat", filePath)
-	out, err := cmd.CombinedOutput()
+	out, err := cmd.Output()
 	if err == nil {
 		// Log warning
 		pattern, _ := regexp.Compile("InitiatorName=(?P<name>.*)\n$")
@@ -168,7 +168,6 @@ func GetHostInfo() (HostInfo, error) {
 		}
 	} else {
 		log.WithError(err).Debugf("Unable to fetch iscsi iqn under %s, permission denied or open-iscsi is not installed?", filePath)
-		err = nil // Reset to nil as it's not critical
 	}
 	info.OSType = runtime.GOOS
 	info.Hostname, _ = os.Hostname()

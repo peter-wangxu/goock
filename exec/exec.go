@@ -32,6 +32,7 @@ func SetLogger(l *logrus.Logger) {
 }
 
 // ErrExecutableNotFound is returned if the executable is not found.
+
 var ErrExecutableNotFound = osexec.ErrNotFound
 
 // Interface is an interface that presents a subset of the os/exec API.  Use this
@@ -108,28 +109,44 @@ func (cmd *cmdWrapper) SetStdout(out io.Writer) {
 }
 
 // CombinedOutput is part of the Cmd interface.
+// Note: if ExitError happened, the error message may be EMPTY.
 func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
+	return executeCmd(cmd, true)
+}
+
+func (cmd *cmdWrapper) Output() ([]byte, error) {
+	return executeCmd(cmd, false)
+}
+
+func executeCmd(cmd *cmdWrapper, combined bool) ([]byte, error) {
 	start := time.Now()
-	out, err := (*osexec.Cmd)(cmd).CombinedOutput()
+	var err error
+	var out []byte
+	if combined {
+		out, err = (*osexec.Cmd)(cmd).CombinedOutput()
+	} else {
+		out, err = (*osexec.Cmd)(cmd).Output()
+	}
 	end := time.Since(start)
 	var exitCode = 0
 	if err != nil {
 		err, exitCode = handleError(err)
+		// When *command not found* error occurred, the out is empty usually,
+		// so overwrite the output if error met.
+		if err == ErrExecutableNotFound {
+			out = []byte(err.Error())
+		}
+		// out is EMPTY with call Output()
+		if combined != true {
+			out = []byte(err.Error())
+		}
 	}
 	log.WithFields(logrus.Fields{
 		"cmd":       cmd.Args,
 		"output":    string(out),
 		"exit_code": exitCode,
 		"duration":  fmt.Sprintf("%.4fs", end.Seconds()),
-	}).Debug("Command line result")
-	return out, err
-}
-
-func (cmd *cmdWrapper) Output() ([]byte, error) {
-	out, err := (*osexec.Cmd)(cmd).Output()
-	if err != nil {
-		err, _ = handleError(err)
-	}
+	}).Debug("Command Result")
 	return out, err
 }
 
@@ -162,6 +179,16 @@ func (eew ExitErrorWrapper) ExitStatus() int {
 		panic("can't call ExitStatus() on a non-WaitStatus exitErrorWrapper")
 	}
 	return ws.ExitStatus()
+}
+
+// Extract the origin error string from ExitError
+func (eew ExitErrorWrapper) String() string {
+	return fmt.Sprintf("%s", eew.Stderr)
+}
+
+// Extract the origin error string from ExitError
+func (eew ExitErrorWrapper) Error() string {
+	return fmt.Sprintf("%s", eew.Stderr)
 }
 
 // CodeExitError is an implementation of ExitError consisting of an error object

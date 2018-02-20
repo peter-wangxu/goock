@@ -129,11 +129,10 @@ func HandleExtend(args ...string) error {
 
 func HandleInfo(args ...string) error {
 	hostInfo, err := connector.GetHostInfo()
-	if err == nil {
-		BeautifyHostInfo(hostInfo)
-	} else {
+	if err != nil {
 		log.WithError(err).Warn("Unable to get host information, permission denied or tools not installed?")
 	}
+	BeautifyHostInfo(hostInfo)
 	return err
 }
 
