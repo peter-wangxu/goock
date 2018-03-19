@@ -45,13 +45,13 @@ func TestHandleInfoFailed(t *testing.T) {
 	assert.Error(t, err)
 }
 func TestValidateLunId_True(t *testing.T) {
-	lunids, err := ValidateLunId([]string{"12", "113"})
+	lunids, err := ValidateLunID([]string{"12", "113"})
 	assert.Nil(t, err)
 	assert.Len(t, lunids, 2)
 }
 
 func TestValidateLunId_False(t *testing.T) {
-	lunids, err := ValidateLunId([]string{"a", "b"})
+	lunids, err := ValidateLunID([]string{"a", "b"})
 	assert.Error(t, err)
 	assert.Len(t, lunids, 0)
 }
@@ -67,15 +67,15 @@ func TestIsLunLike_True(t *testing.T) {
 }
 
 func TestIsIpLike_True(t *testing.T) {
-	r := IsIpLike("192.168.1.29")
+	r := IsIPLike("192.168.1.29")
 	assert.True(t, r)
 }
 
 func TestIsIpLike_False(t *testing.T) {
-	r := IsIpLike("192.168.1.")
+	r := IsIPLike("192.168.1.")
 	assert.False(t, r)
 
-	r = IsIpLike("129")
+	r = IsIPLike("129")
 	assert.False(t, r)
 }
 

@@ -17,32 +17,34 @@ package client
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/connector"
 	"strconv"
+	"github.com/peter-wangxu/goock/connector"
 )
 
 var fcConnector = connector.NewFibreChannelConnector()
 
+// SetFcConnector sets the connector for FC connection
 func SetFcConnector(fc connector.FibreChannelInterface) {
 	fcConnector = fc
 }
 
-func Convert2ConnectionProperty(wwns []string, lunId string) connector.ConnectionProperty {
+// Convert2ConnectionProperty converts wwn and lunid pair into ConnnectionProperty
+func Convert2ConnectionProperty(wwns []string, lunID string) connector.ConnectionProperty {
 	var property connector.ConnectionProperty
 	property.TargetWwns = wwns
-	property.TargetLun, _ = strconv.Atoi(lunId)
+	property.TargetLun, _ = strconv.Atoi(lunID)
 	property.StorageProtocol = connector.FcProtocol
 
 	return property
 }
 
+// HandleFCConnect handles the connection of FC target
 func HandleFCConnect(args ...string) error {
 	var err error
 	if len(args) == 1 {
 		// User only supply the LUN ID, so did a wildcard scan for all connected targets
-		err = fmt.Errorf("Currently [lun id] is not supported.")
+		err = fmt.Errorf("currently [LUN ID] is not supported")
 		log.WithError(err).Error("Unsupported parameters.")
-		log.Error("%s", args)
 	} else {
 		targets := args[:len(args)-1]
 
@@ -58,6 +60,7 @@ func HandleFCConnect(args ...string) error {
 	return err
 }
 
+// HandleFCExtend handle the request to extend the FC devices.
 func HandleFCExtend(args ...string) error {
 	return nil
 }

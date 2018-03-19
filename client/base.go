@@ -30,8 +30,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var log *logrus.Logger = logrus.New()
+var log = logrus.New()
 
+// VolumeFormat defines the `volume` output format
 var VolumeFormat = `Volume Information:
 Multipath:       %s
 Single Paths:
@@ -40,6 +41,7 @@ Multipath ID:    %s
 WWN:             %s
 `
 
+// HostInfoFormat defines the `info` command output
 var HostInfoFormat = `
 Host Name(FQDN):                    %s
 iSCSI Qualified Name(IQN):          %s
@@ -51,7 +53,7 @@ Connected iSCSI Sessions:
 %s
 `
 
-// Enable the console log for client
+// InitLog enables the console log for client
 func InitLog(debug bool) error {
 	if debug {
 		log = logrus.New()
@@ -84,17 +86,16 @@ func HandleConnect(args ...string) error {
 	var err error
 	if len(args) <= 0 {
 		log.Error("Target IP or wwn is required.")
-		err = fmt.Errorf("Target IP or wwn is required.")
+		err = fmt.Errorf("target IP or wwn is required")
 	} else if len(args) == 1 {
 		// User only supply the LUN ID, so did a wildcard scan for all connected targets
-		err = fmt.Errorf("Currently [lun id] is not supported.")
-		log.WithError(err).Error("Unsupported parameters.")
-		log.Error("%s", args)
+		err = fmt.Errorf("currently [lun id] is not supported")
+		log.WithError(err).Error("Unsupported parameters. {%s}", args)
 	} else {
 		target := args[0]
 		// Make sure the last param is LUN ID.
-		if _, err = ValidateLunId(args[len(args)-1:]); err == nil {
-			if IsIpLike(target) {
+		if _, err = ValidateLunID(args[len(args)-1:]); err == nil {
+			if IsIPLike(target) {
 				return HandleISCSIConnect(args...)
 			}
 			if IsFcLike(target) {
@@ -114,10 +115,10 @@ func HandleDisconnect(args ...string) error {
 func HandleExtend(args ...string) error {
 	var err error
 	if len(args) <= 0 {
-		err = fmt.Errorf("Need device name or Target IP with LUN ID.")
+		err = fmt.Errorf("need device name or Target IP with LUN ID")
 	} else if len(args) == 1 {
 		// User only supplies the local device name
-		err = fmt.Errorf("Currently device name is not supported.")
+		err = fmt.Errorf("currently device name is not supported")
 	} else {
 		// User specify TargetIP with LUN ID
 		err = HandleISCSIExtend(args...)
@@ -126,6 +127,7 @@ func HandleExtend(args ...string) error {
 
 }
 
+// HandleInfo displays the host information
 func HandleInfo(args ...string) error {
 	hostInfo, err := connector.GetHostInfo()
 	if err != nil {
@@ -154,13 +156,14 @@ func BeautifyHostInfo(info connector.HostInfo) {
 	fmt.Printf(HostInfoFormat, info.Hostname, info.Initiator, sWwns, sTargetWwns, sIscsiTargets)
 }
 
-func ValidateLunId(lunIDs []string) ([]int, error) {
+// ValidateLunID validates the LunIDs as integer
+func ValidateLunID(lunIDs []string) ([]int, error) {
 	var err error
 	re, _ := regexp.Compile("\\d+")
 	var ret []int
 	for _, lun := range lunIDs {
 		if re.MatchString(lun) == false {
-			err = fmt.Errorf("%s does not look like a LUN ID.", lun)
+			err = fmt.Errorf("%s does not look like a LUN ID", lun)
 			break
 		}
 		i, _ := strconv.Atoi(lun)
@@ -181,8 +184,8 @@ func IsLunLike(data string) bool {
 	return true
 }
 
-// IsIpLike tests if *data* is a ipv4 address.
-func IsIpLike(data string) bool {
+// IsIPLike tests if *data* is a ipv4 address.
+func IsIPLike(data string) bool {
 	// IPv4 match
 	if m, _ := regexp.MatchString("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$", data); !m {
 		return false

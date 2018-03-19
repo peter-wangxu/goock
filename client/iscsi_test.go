@@ -17,7 +17,7 @@ func (fake *FakeISCSIConnector) GetHostInfo() (connector.HostInfo, error) {
 
 func (fake *FakeISCSIConnector) ConnectVolume(connectionProperty connector.ConnectionProperty) (connector.VolumeInfo, error) {
 	if len(connectionProperty.TargetPortals) > 0 && connectionProperty.TargetPortals[0] == "10.244.244.244" {
-		return connector.VolumeInfo{}, fmt.Errorf("Failed to connect volume.")
+		return connector.VolumeInfo{}, fmt.Errorf("failed to connect volume")
 	}
 	return connector.VolumeInfo{}, nil
 }
