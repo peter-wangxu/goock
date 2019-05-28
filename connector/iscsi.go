@@ -225,7 +225,7 @@ func (iscsi *ISCSIConnector) ConnectVolume(connectionProperty ConnectionProperty
 		info.MultipathId = ""
 
 	}
-	log.Debug("ConnectVolume returning %s", info)
+	log.Debugf("ConnectVolume returning %s", info)
 	return info, nil
 
 }

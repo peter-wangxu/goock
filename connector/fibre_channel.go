@@ -56,7 +56,7 @@ func (fc *FibreChannelConnector) ConnectVolume(connectionProperty ConnectionProp
 	volumeInfo.MultipathId = lunWwn
 	volumeInfo.Multipath = mPath
 	volumeInfo.Paths, _ = goockutil.FilterPath(hostPaths)
-	log.Debug("ConnectVolume returning %s", volumeInfo)
+	log.Debugf("ConnectVolume returning %s", volumeInfo)
 
 	return volumeInfo, nil
 }

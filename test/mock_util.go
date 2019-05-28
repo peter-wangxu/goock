@@ -98,7 +98,14 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 	if file, err := os.Open(fileName); err == nil {
 
 		// make sure it gets closed
-		defer file.Close()
+		defer func() {
+			if file != nil {
+				errClose := file.Close()
+				if errClose != nil {
+					fmt.Printf("failed to close file: %s: %s", file.Name(), errClose.Error())
+				}
+			}
+		}()
 		fmt.Printf("Reading mock file: %s\n", fileName)
 
 		// create a new scanner and read the file line by line
@@ -127,8 +134,8 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 		}
 
 	} else {
-		fmt.Printf("Unable to read mock data from file %s, default to empty string.\n", fileName)
-		return []byte(""), fmt.Errorf("Unable to read mock file [%s]", fileName)
+		fmt.Printf("unable to read mock data from file %s(%q), default to empty string.\n", fileName, err.Error())
+		return []byte(""), fmt.Errorf("unable to read mock file [%s]", fileName)
 	}
 
 }

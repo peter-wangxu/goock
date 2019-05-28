@@ -90,7 +90,7 @@ func HandleConnect(args ...string) error {
 	} else if len(args) == 1 {
 		// User only supply the LUN ID, so did a wildcard scan for all connected targets
 		err = fmt.Errorf("currently [lun id] is not supported")
-		log.WithError(err).Error("Unsupported parameters. {%s}", args)
+		log.WithError(err).Errorf("Unsupported parameters. {%s}", args)
 	} else {
 		target := args[0]
 		// Make sure the last param is LUN ID.
