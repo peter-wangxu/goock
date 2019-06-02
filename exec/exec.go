@@ -34,6 +34,7 @@ func SetLogger(l *logrus.Logger) {
 // ErrExecutableNotFound is returned if the executable is not found.
 
 var ErrExecutableNotFound = osexec.ErrNotFound
+var ErrExitError = osexec.ExitError{}
 
 // Interface is an interface that presents a subset of the os/exec API.  Use this
 // when you want to inject fakeable/mockable exec behavior.
@@ -137,9 +138,16 @@ func executeCmd(cmd *cmdWrapper, combined bool) ([]byte, error) {
 		if err == ErrExecutableNotFound {
 			out = []byte(err.Error())
 		}
+
 		// out is EMPTY with call Output()
 		if combined != true {
 			out = []byte(err.Error())
+		}
+		// error.Error() is EMPTY when exitError
+		// so set the err.Error() to output
+		if eer, ok := err.(*ExitErrorWrapper); ok && combined {
+			eer.Stderr = out
+			//return out, err
 		}
 	}
 	log.WithFields(logrus.Fields{
