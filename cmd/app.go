@@ -37,7 +37,7 @@ const (
   
    v0.1.2
 `
-    // Usage specifies the simple usage
+	// Usage specifies the simple usage
 	Usage = `A easy-to-use block device management tool.`
 )
 

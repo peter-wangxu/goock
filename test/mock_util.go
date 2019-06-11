@@ -26,6 +26,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"runtime"
 	"strings"
 )
 
@@ -92,7 +94,7 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 	fileName = strings.Replace(fileName, "/", "_", -1)
 	fileName = strings.Replace(fileName, "\\", "_", -1)
 	fileName = strings.Replace(fileName, ":", "_", -1)
-	fileName = fmt.Sprintf("%s%s.txt", getMockDir(), fileName)
+	fileName = path.Join(getMockDir(), fmt.Sprintf("%s.txt", fileName))
 
 	// open a file
 	if file, err := os.Open(fileName); err == nil {
@@ -140,16 +142,13 @@ func (m *MockCmd) mockOutput() ([]byte, error) {
 
 }
 
-func getMockDir() string {
-	goPath := os.Getenv("GOPATH")
-	goPath = strings.Split(goPath, string(os.PathListSeparator))[0]
-	var goProject string
-	if goPath == "" {
-		goProject, _ = os.Getwd()
-	} else {
-		goProject = fmt.Sprintf("%s/src/github.com/peter-wangxu/goock", goPath)
-	}
+var mockDataDir string
 
-	mockDir := fmt.Sprintf("%s/%s/%s/", goProject, "test", "mock_data")
-	return mockDir
+func init() {
+	_, filename, _, _ := runtime.Caller(0)
+	mockDataDir = path.Join(path.Dir(filename), "mock_data")
+}
+
+func getMockDir() string {
+	return mockDataDir
 }

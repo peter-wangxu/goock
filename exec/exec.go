@@ -18,11 +18,11 @@ package exec
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	osexec "os/exec"
 	"syscall"
 	"time"
-	"github.com/sirupsen/logrus"
 )
 
 var log *logrus.Logger = logrus.New()
