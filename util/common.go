@@ -41,11 +41,11 @@ func SetExecutor(e exec.Interface) {
 
 func WaitForPath(path string, maxWait int) bool {
 	for x := 0; x < maxWait; x++ {
+		time.Sleep(time.Second * time.Duration(WaitInterval))
 		err := IsPathExists(path)
 		if err == nil {
 			return true
 		}
-		time.Sleep(time.Second * time.Duration(WaitInterval))
 	}
 	log.Debugf("Path %s does not appear in %v seconds", path, maxWait*WaitInterval)
 	return false
@@ -63,6 +63,7 @@ func WaitForAnyPath(paths []string, hook func()) (string, error) {
 	}
 
 	for x := 0; x < maxWait; x++ {
+		time.Sleep(time.Second * time.Duration(WaitInterval))
 		for _, path := range paths {
 			err = IsPathExists(path)
 			if err == nil {
@@ -73,7 +74,6 @@ func WaitForAnyPath(paths []string, hook func()) (string, error) {
 		if nil != hook {
 			hook()
 		}
-		time.Sleep(time.Second * time.Duration(WaitInterval))
 	}
 	return "", err
 }
@@ -96,11 +96,11 @@ func FilterPath(paths []string) ([]string, error) {
 func WaitForPathRemoval(paths []string, maxWait int) []string {
 	var left []string
 	for x := 0; x < maxWait; x++ {
+		time.Sleep(time.Second * time.Duration(WaitInterval))
 		left, _ = FilterPath(paths)
 		if len(left) == 0 {
 			break
 		}
-		time.Sleep(time.Second * time.Duration(WaitInterval))
 	}
 	return left
 }
