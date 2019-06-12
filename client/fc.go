@@ -17,8 +17,8 @@ package client
 
 import (
 	"fmt"
-	"strconv"
 	"github.com/peter-wangxu/goock/connector"
+	"strconv"
 )
 
 var fcConnector = connector.NewFibreChannelConnector()

@@ -12,8 +12,8 @@ install:
   - echo %GOPATH%
   - go version
   - go env
-  - go get -d -v -t ./...
   - go build -v
 
 build_script:
-  - go test -v -race ./...
+  - for /f "" %%G in ('go list ./... ^| find /i /v "vendor/"') do @go vet %%G
+  - for /f "" %%G in ('go list ./... ^| find /i /v "vendor/"') do @go test -v -race %%G
