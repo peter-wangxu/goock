@@ -17,8 +17,8 @@ package linux
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/model"
-	"github.com/peter-wangxu/goock/util"
+	"github.com/peter-wangxu/goock/pkg/model"
+	"github.com/peter-wangxu/goock/pkg/util"
 	"strings"
 )
 

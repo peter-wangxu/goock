@@ -19,8 +19,8 @@ package client
 import (
 	"fmt"
 
-	"github.com/peter-wangxu/goock/connector"
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/connector"
+	"github.com/peter-wangxu/goock/pkg/model"
 )
 
 var iscsiConnector = connector.NewISCSIConnector()

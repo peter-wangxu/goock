@@ -17,10 +17,10 @@ package connector
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/linux"
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/linux"
+	"github.com/peter-wangxu/goock/pkg/model"
 	"github.com/peter-wangxu/goock/test"
-	goockutil "github.com/peter-wangxu/goock/util"
+	goockutil "github.com/peter-wangxu/goock/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
