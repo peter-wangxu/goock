@@ -1,11 +1,11 @@
 package client
 
 import (
-	"github.com/peter-wangxu/goock/connector"
-	"github.com/peter-wangxu/goock/linux"
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/connector"
+	"github.com/peter-wangxu/goock/pkg/linux"
+	"github.com/peter-wangxu/goock/pkg/model"
 	"github.com/peter-wangxu/goock/test"
-	"github.com/peter-wangxu/goock/util"
+	"github.com/peter-wangxu/goock/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

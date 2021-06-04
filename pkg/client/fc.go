@@ -17,7 +17,7 @@ package client
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/connector"
+	"github.com/peter-wangxu/goock/pkg/connector"
 	"strconv"
 )
 

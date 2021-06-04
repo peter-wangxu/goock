@@ -17,7 +17,7 @@ package linux
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/model"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"

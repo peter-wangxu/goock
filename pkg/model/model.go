@@ -17,7 +17,7 @@ package model
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/exec"
+	"github.com/peter-wangxu/goock/pkg/exec"
 	"github.com/sirupsen/logrus"
 	"reflect"
 	"regexp"

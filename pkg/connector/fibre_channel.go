@@ -2,10 +2,10 @@ package connector
 
 import (
 	"fmt"
-	"github.com/peter-wangxu/goock/exec"
-	"github.com/peter-wangxu/goock/linux"
-	"github.com/peter-wangxu/goock/model"
-	goockutil "github.com/peter-wangxu/goock/util"
+	"github.com/peter-wangxu/goock/pkg/exec"
+	"github.com/peter-wangxu/goock/pkg/linux"
+	"github.com/peter-wangxu/goock/pkg/model"
+	goockutil "github.com/peter-wangxu/goock/pkg/util"
 	"github.com/sirupsen/logrus"
 	"strings"
 )

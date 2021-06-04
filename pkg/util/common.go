@@ -17,7 +17,7 @@ package util
 
 import (
 	"errors"
-	"github.com/peter-wangxu/goock/exec"
+	"github.com/peter-wangxu/goock/pkg/exec"
 	"github.com/sirupsen/logrus"
 	"time"
 )

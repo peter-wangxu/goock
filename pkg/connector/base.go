@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/peter-wangxu/goock/exec"
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/exec"
+	"github.com/peter-wangxu/goock/pkg/model"
 	"github.com/sirupsen/logrus"
 )
 

@@ -17,7 +17,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/peter-wangxu/goock/client"
+	"github.com/peter-wangxu/goock/pkg/client"
 	"github.com/urfave/cli"
 )
 
