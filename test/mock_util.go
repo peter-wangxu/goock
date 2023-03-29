@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/peter-wangxu/goock/exec"
+	"github.com/peter-wangxu/goock/pkg/exec"
 	"github.com/stretchr/testify/mock"
 	"io"
 	"io/ioutil"
