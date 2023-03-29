@@ -16,7 +16,7 @@ limitations under the License.
 package linux
 
 import (
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/model"
 	"github.com/peter-wangxu/goock/test"
 	"github.com/stretchr/testify/assert"
 	"testing"

@@ -3,9 +3,9 @@ package client
 import (
 	"testing"
 
-	"github.com/peter-wangxu/goock/connector"
-	"github.com/peter-wangxu/goock/exec"
-	"github.com/peter-wangxu/goock/model"
+	"github.com/peter-wangxu/goock/pkg/connector"
+	"github.com/peter-wangxu/goock/pkg/exec"
+	"github.com/peter-wangxu/goock/pkg/model"
 	"github.com/peter-wangxu/goock/test"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
